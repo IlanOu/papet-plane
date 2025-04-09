@@ -4563,7 +4563,7 @@ MonoBehaviour:
   - {fileID: 480966491}
   - {fileID: 808655650}
   - {fileID: 2009157484}
-  timeBetweenSpawns: 5
+  timeBetweenSpawns: 30
   maxSpawnedMagazines: 5
 --- !u!4 &637992981
 Transform:

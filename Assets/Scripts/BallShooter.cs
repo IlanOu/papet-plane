@@ -274,6 +274,6 @@ public class BallShooter : MonoBehaviour
     public void FillAmmo(int amount)
     {
         currentAmmo = amount;
-        isCharged = false;
+        // isCharged = false;
     }
 }
