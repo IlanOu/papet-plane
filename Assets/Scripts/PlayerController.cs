@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
     [Header("Composants")]
     public Animator animator;
     public CharacterController controller;
+    public Transform spawnPoint;
     
     [Header("Paramètres visuels")]
     public Color[] playerColors = { Color.red, Color.blue, Color.green, Color.yellow };
@@ -17,11 +18,10 @@ public class PlayerController : MonoBehaviour
     
     // Variables privées
     private Vector2 movementInput;
-    private Vector3 movement;
-    private string currentAnimationState;
     private int playerIndex;
     private Camera mainCamera;
     private PlayerInput playerInput;
+    private Vector3 lastMoveDirection;
     
     // Constantes pour les noms des animations
     private const string ANIM_IDLE_DOWN = "Idle_Down";
@@ -49,43 +49,42 @@ public class PlayerController : MonoBehaviour
             InitPlayer(playerInput.playerIndex);
             Debug.Log($"Joueur {playerIndex+1} initialisé");
         }
+        
+        // Créer le spawnPoint s'il n'existe pas
+        if (spawnPoint == null)
+        {
+            GameObject spawnObj = new GameObject("SpawnPoint");
+            spawnPoint = spawnObj.transform;
+            spawnPoint.SetParent(transform);
+            spawnPoint.localPosition = new Vector3(0, 0, 0.5f); // Légèrement devant le joueur
+        }
     }
     
     public void InitPlayer(int index)
     {
         playerIndex = index;
-        
-        // Appliquer une couleur différente
-        if (spriteRenderer != null && playerColors.Length > index)
-        {
-            spriteRenderer.material.color = playerColors[index];
-        }
-        
         gameObject.name = $"Player_{index + 1}";
     }
     
-    // MÉTHODE CLÉ - Assurez-vous qu'elle est connectée dans l'Inspector
     public void OnMove(InputAction.CallbackContext context)
     {
-        // Lire la valeur de l'input et l'afficher pour le débogage
         movementInput = context.ReadValue<Vector2>();
-        Debug.Log($"Movement Input: {movementInput}");
     }
     
     private void Update()
     {
-        // Simplification - Utiliser transform.Translate comme dans le script fonctionnel
-        // tout en gardant la logique de conversion 2D/3D
         Vector3 moveVector = new Vector3(movementInput.x, 0, movementInput.y);
         
         // Déplacement et animation uniquement si on bouge
         if (moveVector.magnitude > 0.1f)
         {
-            // CHANGEMENT CLÉ: Utiliser Translate au lieu de controller.Move
-            // pour tester si le mouvement fonctionne
             transform.Translate(moveVector * moveSpeed * Time.deltaTime);
+            lastMoveDirection = moveVector.normalized;
             
-            // Logique d'animation existante
+            // Mettre à jour la rotation du spawnPoint pour qu'il pointe dans la direction du mouvement
+            spawnPoint.forward = new Vector3(lastMoveDirection.x, 0, lastMoveDirection.z);
+            
+            // Logique d'animation
             float angle = Mathf.Atan2(movementInput.y, movementInput.x) * Mathf.Rad2Deg;
             if (angle < 0) angle += 360f;
             
@@ -127,6 +126,8 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(transform.position - mainCamera.transform.position);
         }
     }
+    
+    private string currentAnimationState;
     
     void ChangeAnimationState(string newState)
     {
