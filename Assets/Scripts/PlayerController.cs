@@ -9,12 +9,14 @@ public class PlayerController : MonoBehaviour
     public Transform spawnPoint;
     
     [Header("Paramètres visuels")]
-    public Color[] playerColors = { Color.red, Color.blue, Color.green, Color.yellow };
     public Renderer spriteRenderer;
     public bool faceCamera = true;
     
     [Header("Paramètres de mouvement")]
     public float moveSpeed = 5f;
+    
+    private float speedModifier = 1.0f;
+    private float baseSpeed;
     
     // Variables privées
     private Vector2 movementInput;
@@ -60,6 +62,22 @@ public class PlayerController : MonoBehaviour
         }
     }
     
+    private void Start()
+    {
+        baseSpeed = moveSpeed;
+    }
+    
+    public void ApplySpeedModifier(float modifier)
+    {
+        speedModifier = modifier;
+        moveSpeed = baseSpeed * speedModifier;
+    }
+
+    public void ResetSpeedModifier()
+    {
+        speedModifier = 1.0f;
+        moveSpeed = baseSpeed;
+    }   
     public void InitPlayer(int index)
     {
         playerIndex = index;
@@ -78,7 +96,7 @@ public class PlayerController : MonoBehaviour
         // Déplacement et animation uniquement si on bouge
         if (moveVector.magnitude > 0.1f)
         {
-            transform.Translate(moveVector * moveSpeed * Time.deltaTime);
+            // transform.Translate(moveVector * moveSpeed * Time.deltaTime);
             lastMoveDirection = moveVector.normalized;
             
             // Mettre à jour la rotation du spawnPoint pour qu'il pointe dans la direction du mouvement
@@ -124,6 +142,35 @@ public class PlayerController : MonoBehaviour
         if (faceCamera && mainCamera != null)
         {
             transform.rotation = Quaternion.LookRotation(transform.position - mainCamera.transform.position);
+        }
+    }
+    
+    private void FixedUpdate()
+    {
+        Vector3 moveVector = new Vector3(movementInput.x, 0, movementInput.y);
+    
+        if (moveVector.magnitude > 0.1f)
+        {
+            // Utiliser CharacterController si disponible
+            if (controller != null)
+            {
+                controller.Move(moveVector * moveSpeed * Time.fixedDeltaTime);
+            }
+            // Sinon, ajouter un Rigidbody et l'utiliser
+            else
+            {
+                Rigidbody rb = GetComponent<Rigidbody>();
+                if (rb == null)
+                {
+                    rb = gameObject.AddComponent<Rigidbody>();
+                    rb.freezeRotation = true;
+                    rb.useGravity = true;
+                    rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+                }
+            
+                // Utiliser MovePosition au lieu de Translate
+                rb.MovePosition(rb.position + moveVector * moveSpeed * Time.fixedDeltaTime);
+            }
         }
     }
     
