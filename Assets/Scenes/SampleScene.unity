@@ -3872,7 +3872,7 @@ GameObject:
   - component: {fileID: 561140205}
   - component: {fileID: 561140207}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Reload Image
   m_TagString: ReloadIndicator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7027,7 +7027,7 @@ GameObject:
   - component: {fileID: 1110002350}
   - component: {fileID: 1110002349}
   m_Layer: 5
-  m_Name: Panel (1)
+  m_Name: Panel Player 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10052,7 +10052,7 @@ GameObject:
   - component: {fileID: 1590415466}
   - component: {fileID: 1590415468}
   m_Layer: 5
-  m_Name: Image
+  m_Name: Reload Image
   m_TagString: ReloadIndicator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12960,7 +12960,7 @@ GameObject:
   - component: {fileID: 1966664067}
   - component: {fileID: 1966664066}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: Panel Player 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

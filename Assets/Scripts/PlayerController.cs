@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private int reloadAnimationFrameCount = 8; // Nombre de frames d'animation pour le rechargement
     private const string reloadAnimation = "Reload"; // Préfixe pour les animations de rechargement
     
+    
     // Constantes pour les noms des animations
     private const string ANIM_IDLE_DOWN = "Idle_Down";
     private const string ANIM_IDLE_UP = "Idle_Up";
@@ -123,6 +124,12 @@ public class PlayerController : MonoBehaviour
     
     public void OnMove(InputAction.CallbackContext context)
     {
+        if (isCurrentlyReloading)
+        {
+            movementInput = Vector2.zero;
+            return;
+        }
+        
         movementInput = context.ReadValue<Vector2>();
         
         // Inverser les contrôles pour le joueur spécifié
@@ -145,6 +152,10 @@ public class PlayerController : MonoBehaviour
     
     private void HandleMovement()
     {
+        
+        if (isCurrentlyReloading) 
+            return;
+        
         Vector3 moveVector = new Vector3(movementInput.x, 0, movementInput.y);
         
         if (moveVector.magnitude > 0.1f)
@@ -344,36 +355,38 @@ public class PlayerController : MonoBehaviour
     private void UpdateIdleAnimation()
     {
         bool isInversedPlayer = (playerIndex == playerInversedIndex);
-        
+        bool usePlaneIdle = (ballShooter != null && ballShooter.IsLoaded());
+    
         if (isInversedPlayer)
         {
-            // Inversion des animations idle
+            // Pour le joueur inversé : on inverse la direction de base et on applique les animations "plane" si chargé
             if (lastDirectionState == "up")
-                ChangeAnimationState(ANIM_IDLE_DOWN);
+                ChangeAnimationState(usePlaneIdle ? "Idle_Down_Plane" : ANIM_IDLE_DOWN);
             else if (lastDirectionState == "down")
-                ChangeAnimationState(ANIM_IDLE_UP);
+                ChangeAnimationState(usePlaneIdle ? "Idle_Up_Plane" : ANIM_IDLE_UP);
             else if (lastDirectionState == "left")
-                ChangeAnimationState(ANIM_IDLE_RIGHT);
+                ChangeAnimationState(usePlaneIdle ? "Idle_Right_Plane" : ANIM_IDLE_RIGHT);
             else if (lastDirectionState == "right")
-                ChangeAnimationState(ANIM_IDLE_LEFT);
+                ChangeAnimationState(usePlaneIdle ? "Idle_Left_Plane" : ANIM_IDLE_LEFT);
             else
-                ChangeAnimationState(ANIM_IDLE_UP); // Idle par défaut inversé
+                ChangeAnimationState(usePlaneIdle ? "Idle_Up_Plane" : ANIM_IDLE_UP); // Idle par défaut inversé
         }
         else
         {
-            // Animation idle normale
+            // Pour le joueur normal
             if (lastDirectionState == "up")
-                ChangeAnimationState(ANIM_IDLE_UP);
+                ChangeAnimationState(usePlaneIdle ? "Idle_Up_Plane" : ANIM_IDLE_UP);
             else if (lastDirectionState == "down")
-                ChangeAnimationState(ANIM_IDLE_DOWN);
+                ChangeAnimationState(usePlaneIdle ? "Idle_Down_Plane" : ANIM_IDLE_DOWN);
             else if (lastDirectionState == "left")
-                ChangeAnimationState(ANIM_IDLE_LEFT);
+                ChangeAnimationState(usePlaneIdle ? "Idle_Left_Plane" : ANIM_IDLE_LEFT);
             else if (lastDirectionState == "right")
-                ChangeAnimationState(ANIM_IDLE_RIGHT);
+                ChangeAnimationState(usePlaneIdle ? "Idle_Right_Plane" : ANIM_IDLE_RIGHT);
             else
-                ChangeAnimationState(ANIM_IDLE_DOWN); // Idle par défaut
+                ChangeAnimationState(usePlaneIdle ? "Idle_Down_Plane" : ANIM_IDLE_DOWN); // Idle par défaut
         }
     }
+
     
     private void ChangeAnimationState(string newState)
     {

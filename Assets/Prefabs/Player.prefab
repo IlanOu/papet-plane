@@ -237,7 +237,7 @@ MonoBehaviour:
   playerInversedIndex: 1
   inverseControls: 1
   reloadSpeedModifier: 0.8
-  reloadAnimation: Reload
+  reloadAnimationFrameCount: 8
 --- !u!114 &9081333767076049813
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -255,6 +255,8 @@ MonoBehaviour:
   shootForce: 50
   playerCamera: {fileID: 4348699314664499575}
   reloadTime: 3
+  magazineCapacity: 10
+  shotsBeforeReload: 3
   reloadIndicatorTag: ReloadIndicator
   reloading:
     m_PersistentCalls:
