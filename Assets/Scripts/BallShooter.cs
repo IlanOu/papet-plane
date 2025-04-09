@@ -11,12 +11,31 @@ public class BallShooter : MonoBehaviour
     [Header("Camera")]
     [SerializeField] private GameObject playerCamera;
     
+    private BonusManager bonusManager;
+    
+    private void Awake()
+    {
+        // Important: obtenez le BonusManager du même GameObject (pas un singleton)
+        bonusManager = GetComponent<BonusManager>();
+        if (bonusManager == null)
+        {
+            bonusManager = gameObject.AddComponent<BonusManager>();
+        }
+    }
+    
     public void Shoot(InputAction.CallbackContext context)
     {
         if (context.performed)
         {
             // Instantiate ball at spawn point
             GameObject ball = Instantiate(ballPrefab, spawnPoint.position, Quaternion.identity);
+            
+            // Appliquer le bonus actuel
+            BallBehaviour ballBehaviour = ball.GetComponent<BallBehaviour>();
+            if (ballBehaviour != null)
+            {
+                ballBehaviour.SetBonus(bonusManager.GetCurrentBonus());
+            }
             
             // Get shooting direction from camera
             Vector3 shootDirection = playerCamera.transform.forward;
@@ -31,18 +50,21 @@ public class BallShooter : MonoBehaviour
                 Transform quadTransform = ball.transform.Find("DirectionQuad");
                 if (quadTransform != null)
                 {
-                    // Set the quad to look in the direction of travel
-                    // but only rotate on Y axis
-                    Quaternion originalRotation = quadTransform.rotation;
-                    quadTransform.rotation = Quaternion.LookRotation(shootDirection);
-                    
-                    // Reset X and Z rotation, keep only Y rotation
-                    Vector3 eulerAngles = quadTransform.eulerAngles;
-                    quadTransform.eulerAngles = new Vector3(originalRotation.eulerAngles.x, 
-                        eulerAngles.y, 
-                        originalRotation.eulerAngles.z);
+                    OrientQuad(quadTransform, shootDirection);
                 }
             }
         }
+    }
+    
+    private void OrientQuad(Transform quadTransform, Vector3 direction)
+    {
+        Quaternion originalRotation = quadTransform.rotation;
+        quadTransform.rotation = Quaternion.LookRotation(direction);
+        
+        // Reset X and Z rotation, keep only Y rotation
+        Vector3 eulerAngles = quadTransform.eulerAngles;
+        quadTransform.eulerAngles = new Vector3(originalRotation.eulerAngles.x, 
+            eulerAngles.y, 
+            originalRotation.eulerAngles.z);
     }
 }

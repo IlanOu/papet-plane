@@ -14,9 +14,10 @@ GameObject:
   - component: {fileID: 5061708735725228743}
   - component: {fileID: 4057311952216209680}
   - component: {fileID: 9081333767076049813}
+  - component: {fileID: 6168564350565970421}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -248,6 +249,18 @@ MonoBehaviour:
   spawnPoint: {fileID: 8615776852792341766}
   shootForce: 50
   playerCamera: {fileID: 4348699314664499575}
+--- !u!114 &6168564350565970421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3522013685097241506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 05c41bcb6b1a49f7ab911d3ff9eb2974, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3709935557594537395
 GameObject:
   m_ObjectHideFlags: 0
@@ -304,7 +317,7 @@ Transform:
   m_GameObject: {fileID: 4348699314664499575}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalPosition: {x: 0, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

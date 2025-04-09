@@ -151,8 +151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   quadTransform: {fileID: 1189210865375380451}
-  lifeTime: 5
-  bounciness: 0.8
+  timer: 0
 --- !u!1 &6614882781423185391
 GameObject:
   m_ObjectHideFlags: 0
