@@ -237,7 +237,7 @@ MonoBehaviour:
   playerInversedIndex: 1
   inverseControls: 1
   reloadSpeedModifier: 0.8
-  reloadAnimationTrigger: Reload
+  reloadAnimation: Reload
 --- !u!114 &9081333767076049813
 MonoBehaviour:
   m_ObjectHideFlags: 0

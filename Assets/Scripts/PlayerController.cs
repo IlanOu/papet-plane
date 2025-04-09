@@ -21,7 +21,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float reloadSpeedModifier = 0.8f; // Multiplicateur de vitesse pendant le rechargement
     
     [Header("Animation de rechargement")]
-    [SerializeField] private string reloadAnimationTrigger = "Reload";
+    [SerializeField] private int reloadAnimationFrameCount = 8; // Nombre de frames d'animation pour le rechargement
+    private const string reloadAnimation = "Reload"; // Préfixe pour les animations de rechargement
     
     // Constantes pour les noms des animations
     private const string ANIM_IDLE_DOWN = "Idle_Down";
@@ -48,6 +49,7 @@ public class PlayerController : MonoBehaviour
     private PlayerInput playerInput;
     private Vector3 lastMoveDirection;
     private string currentAnimationState;
+    private string lastDirectionState; // Pour se souvenir de la dernière direction (up, down, left, right)
     private float baseSpeed;
     private float speedModifier = 1.0f;
     private bool isCurrentlyReloading = false;
@@ -192,7 +194,20 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 moveVector = new Vector3(movementInput.x, 0, movementInput.y);
         
-        if (moveVector.magnitude > 0.1f)
+        // Si en rechargement, jouer l'animation de rechargement indépendamment du mouvement
+        if (isCurrentlyReloading)
+        {
+            ChangeAnimationState(reloadAnimation);
+            
+            // Mettre à jour la direction du mouvement et le spawnPoint quand même
+            // if (moveVector.magnitude > 0.1f)
+            // {
+            //     lastMoveDirection = moveVector.normalized;
+            //     spawnPoint.forward = new Vector3(lastMoveDirection.x, 0, lastMoveDirection.z);
+            //     UpdateDirectionState(movementInput);
+            // }
+        }
+        else if (moveVector.magnitude > 0.1f)
         {
             // Mettre à jour la direction du mouvement
             lastMoveDirection = moveVector.normalized;
@@ -200,13 +215,52 @@ public class PlayerController : MonoBehaviour
             // Mettre à jour la rotation du spawnPoint pour qu'il pointe dans la direction du mouvement
             spawnPoint.forward = new Vector3(lastMoveDirection.x, 0, lastMoveDirection.z);
             
-            // Déterminer l'animation en fonction de la direction
+            // Animation de déplacement normale
             UpdateMovementAnimation(movementInput);
         }
         else
         {
-            // Animation idle basée sur la dernière animation de mouvement
+            // Animation idle normale
             UpdateIdleAnimation();
+        }
+    }
+    
+    private void UpdateDirectionState(Vector2 input)
+    {
+        float angle = Mathf.Atan2(input.y, input.x) * Mathf.Rad2Deg;
+        if (angle < 0) angle += 360f;
+        
+        bool isInversedPlayer = (playerIndex == playerInversedIndex);
+        
+        if (isInversedPlayer)
+        {
+            if (angle >= 22.5f && angle < 67.5f)
+                lastDirectionState = "left";  // Droite devient gauche
+            else if (angle >= 67.5f && angle < 112.5f)
+                lastDirectionState = "down";  // Haut devient bas
+            else if (angle >= 112.5f && angle < 202.5f)
+                lastDirectionState = "right"; // Gauche devient droite
+            else if (angle >= 202.5f && angle < 247.5f)
+                lastDirectionState = "right"; // Gauche devient droite
+            else if (angle >= 247.5f && angle < 292.5f)
+                lastDirectionState = "up";    // Bas devient haut
+            else
+                lastDirectionState = "left";  // Droite devient gauche
+        }
+        else
+        {
+            if (angle >= 22.5f && angle < 67.5f)
+                lastDirectionState = "right";
+            else if (angle >= 67.5f && angle < 112.5f)
+                lastDirectionState = "up";
+            else if (angle >= 112.5f && angle < 202.5f)
+                lastDirectionState = "left";
+            else if (angle >= 202.5f && angle < 247.5f)
+                lastDirectionState = "left";
+            else if (angle >= 247.5f && angle < 292.5f)
+                lastDirectionState = "down";
+            else
+                lastDirectionState = "right";
         }
     }
     
@@ -220,34 +274,70 @@ public class PlayerController : MonoBehaviour
         if (isInversedPlayer)
         {
             // Animations inversées
-            if (angle >= 22.5f && angle < 67.5f) 
+            if (angle >= 22.5f && angle < 67.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_LEFT);  // Droite devient gauche
-            else if (angle >= 67.5f && angle < 112.5f) 
+                lastDirectionState = "left";
+            }
+            else if (angle >= 67.5f && angle < 112.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_DOWN);  // Haut devient bas
-            else if (angle >= 112.5f && angle < 202.5f) 
+                lastDirectionState = "down";
+            }
+            else if (angle >= 112.5f && angle < 202.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_RIGHT); // Gauche devient droite
-            else if (angle >= 202.5f && angle < 247.5f) 
+                lastDirectionState = "right";
+            }
+            else if (angle >= 202.5f && angle < 247.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_RIGHT); // Gauche devient droite
-            else if (angle >= 247.5f && angle < 292.5f) 
+                lastDirectionState = "right";
+            }
+            else if (angle >= 247.5f && angle < 292.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_UP);    // Bas devient haut
+                lastDirectionState = "up";
+            }
             else
+            {
                 ChangeAnimationState(ANIM_WALK_LEFT);  // Droite devient gauche
+                lastDirectionState = "left";
+            }
         }
         else
         {
             // Animation normale
-            if (angle >= 22.5f && angle < 67.5f) 
+            if (angle >= 22.5f && angle < 67.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_RIGHT);
-            else if (angle >= 67.5f && angle < 112.5f) 
+                lastDirectionState = "right";
+            }
+            else if (angle >= 67.5f && angle < 112.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_UP);
-            else if (angle >= 112.5f && angle < 202.5f) 
+                lastDirectionState = "up";
+            }
+            else if (angle >= 112.5f && angle < 202.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_LEFT);
-            else if (angle >= 202.5f && angle < 247.5f) 
+                lastDirectionState = "left";
+            }
+            else if (angle >= 202.5f && angle < 247.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_LEFT);
-            else if (angle >= 247.5f && angle < 292.5f) 
+                lastDirectionState = "left";
+            }
+            else if (angle >= 247.5f && angle < 292.5f)
+            {
                 ChangeAnimationState(ANIM_WALK_DOWN);
+                lastDirectionState = "down";
+            }
             else
+            {
                 ChangeAnimationState(ANIM_WALK_RIGHT);
+                lastDirectionState = "right";
+            }
         }
     }
     
@@ -258,29 +348,29 @@ public class PlayerController : MonoBehaviour
         if (isInversedPlayer)
         {
             // Inversion des animations idle
-            if (currentAnimationState == ANIM_WALK_UP)
+            if (lastDirectionState == "up")
                 ChangeAnimationState(ANIM_IDLE_DOWN);
-            else if (currentAnimationState == ANIM_WALK_DOWN)
+            else if (lastDirectionState == "down")
                 ChangeAnimationState(ANIM_IDLE_UP);
-            else if (currentAnimationState == ANIM_WALK_LEFT)
+            else if (lastDirectionState == "left")
                 ChangeAnimationState(ANIM_IDLE_RIGHT);
-            else if (currentAnimationState == ANIM_WALK_RIGHT)
+            else if (lastDirectionState == "right")
                 ChangeAnimationState(ANIM_IDLE_LEFT);
-            else if (currentAnimationState == null || !currentAnimationState.StartsWith("Idle"))
+            else
                 ChangeAnimationState(ANIM_IDLE_UP); // Idle par défaut inversé
         }
         else
         {
             // Animation idle normale
-            if (currentAnimationState == ANIM_WALK_UP)
+            if (lastDirectionState == "up")
                 ChangeAnimationState(ANIM_IDLE_UP);
-            else if (currentAnimationState == ANIM_WALK_DOWN)
+            else if (lastDirectionState == "down")
                 ChangeAnimationState(ANIM_IDLE_DOWN);
-            else if (currentAnimationState == ANIM_WALK_LEFT)
+            else if (lastDirectionState == "left")
                 ChangeAnimationState(ANIM_IDLE_LEFT);
-            else if (currentAnimationState == ANIM_WALK_RIGHT)
+            else if (lastDirectionState == "right")
                 ChangeAnimationState(ANIM_IDLE_RIGHT);
-            else if (currentAnimationState == null || !currentAnimationState.StartsWith("Idle"))
+            else
                 ChangeAnimationState(ANIM_IDLE_DOWN); // Idle par défaut
         }
     }
@@ -301,43 +391,65 @@ public class PlayerController : MonoBehaviour
     private void OnReloading()
     {
         if (isCurrentlyReloading) return;
-        
+    
         isCurrentlyReloading = true;
-        
-        // Déclencher l'animation de rechargement
-        if (animator != null)
-        {
-            animator.SetTrigger(reloadAnimationTrigger);
-        }
-        
-        // Ralentir le joueur pendant le rechargement
+    
+        // Ralentir le joueur pendant le rechargement si nécessaire
         if (reloadSpeedModifier != 1.0f)
         {
             ApplySpeedModifier(reloadSpeedModifier);
         }
-        
+    
         // Annuler la coroutine existante si nécessaire
         if (reloadCoroutine != null)
         {
             StopCoroutine(reloadCoroutine);
         }
-        
-        // Démarrer une nouvelle coroutine
-        reloadCoroutine = StartCoroutine(ResetReloadingState(ballShooter.GetReloadTime()));
-    }
     
-    private IEnumerator ResetReloadingState(float delay)
+        // Démarrer une nouvelle coroutine pour l'animation de rechargement
+        reloadCoroutine = StartCoroutine(PlayReloadAnimation(ballShooter.GetReloadTime()));
+    }
+
+    private IEnumerator PlayReloadAnimation(float reloadTime)
     {
-        yield return new WaitForSeconds(delay);
+        float elapsedTime = 0f;
+    
+        // Définir la durée de chaque frame d'animation
+        float frameDuration = reloadTime / reloadAnimationFrameCount;
+        int currentFrame = 0;
+    
+        while (elapsedTime < reloadTime)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / reloadTime;
         
+            // Calculer l'index de frame actuel
+            int frameIndex = Mathf.FloorToInt(progress * reloadAnimationFrameCount);
+            frameIndex = Mathf.Clamp(frameIndex, 0, reloadAnimationFrameCount - 1);
+        
+            // Si nous avons changé de frame, mettre à jour l'animation
+            if (frameIndex != currentFrame)
+            {
+                currentFrame = frameIndex;
+                string animationName = $"{reloadAnimation}_{currentFrame}";
+                ChangeAnimationState(animationName);
+            }
+        
+            yield return null;
+        }
+    
+        // Fin du rechargement
         isCurrentlyReloading = false;
-        
+    
         // Restaurer la vitesse normale
         if (reloadSpeedModifier != 1.0f)
         {
             ResetSpeedModifier();
         }
-        
+    
+        // Revenir à l'animation idle appropriée
+        UpdateIdleAnimation();
+    
         reloadCoroutine = null;
     }
     
