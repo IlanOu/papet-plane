@@ -15,6 +15,9 @@ public class PlayerController : MonoBehaviour
     [Header("Paramètres de mouvement")]
     public float moveSpeed = 5f;
     
+    [SerializeField] private int playerInversedIndex = 1;
+    [SerializeField] private bool inverseControls = true;
+    
     private float speedModifier = 1.0f;
     private float baseSpeed;
     
@@ -34,6 +37,14 @@ public class PlayerController : MonoBehaviour
     private const string ANIM_WALK_UP = "Walk_Up";
     private const string ANIM_WALK_LEFT = "Walk_Left";
     private const string ANIM_WALK_RIGHT = "Walk_Right";
+    private const string ANIM_WALK_PLANE_RIGHT = "Walk_Right_Plane";
+    private const string ANIM_WALK_PLANE_LEFT = "Walk_Left_Plane";
+    private const string ANIM_WALK_PLANE_UP = "Walk_Up_Plane";
+    private const string ANIM_WALK_PLANE_DOWN = "Walk_Down_Plane";
+    private const string ANIM_IDLE_PLANE_RIGHT = "Idle_Right_Plane";
+    private const string ANIM_IDLE_PLANE_LEFT = "Idle_Left_Plane";
+    private const string ANIM_IDLE_PLANE_UP = "Idle_Up_Plane";
+    private const string ANIM_IDLE_PLANE_DOWN = "Idle_Down_Plane";
     
     private void Awake()
     {
@@ -78,15 +89,27 @@ public class PlayerController : MonoBehaviour
         speedModifier = 1.0f;
         moveSpeed = baseSpeed;
     }   
+    
     public void InitPlayer(int index)
     {
         playerIndex = index;
         gameObject.name = $"Player_{index + 1}";
+        
+        if (index == playerInversedIndex)
+        {
+            transform.rotation = Quaternion.Euler(0, 180, 0);
+        }
     }
     
     public void OnMove(InputAction.CallbackContext context)
     {
         movementInput = context.ReadValue<Vector2>();
+        
+        // Inverser les contrôles pour le joueur spécifié
+        if (playerIndex == playerInversedIndex && inverseControls)
+        {
+            movementInput = new Vector2(-movementInput.x, -movementInput.y);
+        }
     }
     
     private void Update()
@@ -106,42 +129,92 @@ public class PlayerController : MonoBehaviour
             float angle = Mathf.Atan2(movementInput.y, movementInput.x) * Mathf.Rad2Deg;
             if (angle < 0) angle += 360f;
             
-            if (angle >= 22.5f && angle < 67.5f) 
-                ChangeAnimationState(ANIM_WALK_RIGHT);
-            else if (angle >= 67.5f && angle < 112.5f) 
-                ChangeAnimationState(ANIM_WALK_UP);
-            else if (angle >= 112.5f && angle < 157.5f) 
-                ChangeAnimationState(ANIM_WALK_LEFT);
-            else if (angle >= 157.5f && angle < 202.5f) 
-                ChangeAnimationState(ANIM_WALK_LEFT);
-            else if (angle >= 202.5f && angle < 247.5f) 
-                ChangeAnimationState(ANIM_WALK_LEFT);
-            else if (angle >= 247.5f && angle < 292.5f) 
-                ChangeAnimationState(ANIM_WALK_DOWN);
-            else if (angle >= 292.5f && angle < 337.5f) 
-                ChangeAnimationState(ANIM_WALK_RIGHT);
-            else 
-                ChangeAnimationState(ANIM_WALK_RIGHT);
+            // Pour le joueur inversé, on inverse les animations
+            if (playerIndex == playerInversedIndex)
+            {
+                // On inverse les directions pour les animations
+                if (angle >= 22.5f && angle < 67.5f) 
+                    ChangeAnimationState(ANIM_WALK_LEFT);  // Droite devient gauche
+                else if (angle >= 67.5f && angle < 112.5f) 
+                    ChangeAnimationState(ANIM_WALK_DOWN);  // Haut devient bas
+                else if (angle >= 112.5f && angle < 157.5f) 
+                    ChangeAnimationState(ANIM_WALK_RIGHT); // Gauche devient droite
+                else if (angle >= 157.5f && angle < 202.5f) 
+                    ChangeAnimationState(ANIM_WALK_RIGHT); // Gauche devient droite
+                else if (angle >= 202.5f && angle < 247.5f) 
+                    ChangeAnimationState(ANIM_WALK_RIGHT); // Gauche devient droite
+                else if (angle >= 247.5f && angle < 292.5f) 
+                    ChangeAnimationState(ANIM_WALK_UP);    // Bas devient haut
+                else if (angle >= 292.5f && angle < 337.5f) 
+                    ChangeAnimationState(ANIM_WALK_LEFT);  // Droite devient gauche
+                else 
+                    ChangeAnimationState(ANIM_WALK_LEFT);  // Droite devient gauche
+            }
+            else
+            {
+                // Animation normale pour le joueur non-inversé
+                if (angle >= 22.5f && angle < 67.5f) 
+                    ChangeAnimationState(ANIM_WALK_RIGHT);
+                else if (angle >= 67.5f && angle < 112.5f) 
+                    ChangeAnimationState(ANIM_WALK_UP);
+                else if (angle >= 112.5f && angle < 157.5f) 
+                    ChangeAnimationState(ANIM_WALK_LEFT);
+                else if (angle >= 157.5f && angle < 202.5f) 
+                    ChangeAnimationState(ANIM_WALK_LEFT);
+                else if (angle >= 202.5f && angle < 247.5f) 
+                    ChangeAnimationState(ANIM_WALK_LEFT);
+                else if (angle >= 247.5f && angle < 292.5f) 
+                    ChangeAnimationState(ANIM_WALK_DOWN);
+                else if (angle >= 292.5f && angle < 337.5f) 
+                    ChangeAnimationState(ANIM_WALK_RIGHT);
+                else 
+                    ChangeAnimationState(ANIM_WALK_RIGHT);
+            }
         }
         else
         {
             // Animation idle
-            if (currentAnimationState == ANIM_WALK_UP)
-                ChangeAnimationState(ANIM_IDLE_UP);
-            else if (currentAnimationState == ANIM_WALK_DOWN)
-                ChangeAnimationState(ANIM_IDLE_DOWN);
-            else if (currentAnimationState == ANIM_WALK_LEFT)
-                ChangeAnimationState(ANIM_IDLE_LEFT);
-            else if (currentAnimationState == ANIM_WALK_RIGHT)
-                ChangeAnimationState(ANIM_IDLE_RIGHT);
-            else if (currentAnimationState == null)
-                ChangeAnimationState(ANIM_IDLE_DOWN);
+            if (playerIndex == playerInversedIndex)
+            {
+                // Inversion des animations idle pour le joueur inversé
+                if (currentAnimationState == ANIM_WALK_UP)
+                    ChangeAnimationState(ANIM_IDLE_DOWN);
+                else if (currentAnimationState == ANIM_WALK_DOWN)
+                    ChangeAnimationState(ANIM_IDLE_UP);
+                else if (currentAnimationState == ANIM_WALK_LEFT)
+                    ChangeAnimationState(ANIM_IDLE_RIGHT);
+                else if (currentAnimationState == ANIM_WALK_RIGHT)
+                    ChangeAnimationState(ANIM_IDLE_LEFT);
+                else if (currentAnimationState == null)
+                    ChangeAnimationState(ANIM_IDLE_UP); // Idle par défaut inversé
+            }
+            else
+            {
+                // Animation idle normale
+                if (currentAnimationState == ANIM_WALK_UP)
+                    ChangeAnimationState(ANIM_IDLE_UP);
+                else if (currentAnimationState == ANIM_WALK_DOWN)
+                    ChangeAnimationState(ANIM_IDLE_DOWN);
+                else if (currentAnimationState == ANIM_WALK_LEFT)
+                    ChangeAnimationState(ANIM_IDLE_LEFT);
+                else if (currentAnimationState == ANIM_WALK_RIGHT)
+                    ChangeAnimationState(ANIM_IDLE_RIGHT);
+                else if (currentAnimationState == null)
+                    ChangeAnimationState(ANIM_IDLE_DOWN);
+            }
         }
         
         // Faire face à la caméra
         if (faceCamera && mainCamera != null)
         {
             transform.rotation = Quaternion.LookRotation(transform.position - mainCamera.transform.position);
+            
+            // Maintenir la rotation Y à 180 degrés pour le joueur inversé
+            if (playerIndex == playerInversedIndex)
+            {
+                Vector3 currentRotation = transform.rotation.eulerAngles;
+                transform.rotation = Quaternion.Euler(currentRotation.x, 180, currentRotation.z);
+            }
         }
     }
     
