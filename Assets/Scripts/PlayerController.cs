@@ -236,45 +236,6 @@ public class PlayerController : MonoBehaviour
         }
     }
     
-    private void UpdateDirectionState(Vector2 input)
-    {
-        float angle = Mathf.Atan2(input.y, input.x) * Mathf.Rad2Deg;
-        if (angle < 0) angle += 360f;
-        
-        bool isInversedPlayer = (playerIndex == playerInversedIndex);
-        
-        if (isInversedPlayer)
-        {
-            if (angle >= 22.5f && angle < 67.5f)
-                lastDirectionState = "left";  // Droite devient gauche
-            else if (angle >= 67.5f && angle < 112.5f)
-                lastDirectionState = "down";  // Haut devient bas
-            else if (angle >= 112.5f && angle < 202.5f)
-                lastDirectionState = "right"; // Gauche devient droite
-            else if (angle >= 202.5f && angle < 247.5f)
-                lastDirectionState = "right"; // Gauche devient droite
-            else if (angle >= 247.5f && angle < 292.5f)
-                lastDirectionState = "up";    // Bas devient haut
-            else
-                lastDirectionState = "left";  // Droite devient gauche
-        }
-        else
-        {
-            if (angle >= 22.5f && angle < 67.5f)
-                lastDirectionState = "right";
-            else if (angle >= 67.5f && angle < 112.5f)
-                lastDirectionState = "up";
-            else if (angle >= 112.5f && angle < 202.5f)
-                lastDirectionState = "left";
-            else if (angle >= 202.5f && angle < 247.5f)
-                lastDirectionState = "left";
-            else if (angle >= 247.5f && angle < 292.5f)
-                lastDirectionState = "down";
-            else
-                lastDirectionState = "right";
-        }
-    }
-    
     private void UpdateMovementAnimation(Vector2 input)
     {
         float angle = Mathf.Atan2(input.y, input.x) * Mathf.Rad2Deg;
@@ -504,5 +465,18 @@ public class PlayerController : MonoBehaviour
         }
     }
     
+    #endregion
+
+    #region Collider events
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Magazine"))
+        {
+            ballShooter.FillAmmo(ballShooter.magazineCapacity);
+            Destroy(other.gameObject);
+        }
+    } 
+
     #endregion
 }

@@ -18,7 +18,7 @@ public class BallShooter : MonoBehaviour
     [SerializeField] private float reloadTime = 3f; // Durée du rechargement (chargement du tir)
     
     [Header("Ammo Settings")]
-    [SerializeField] private int magazineCapacity = 5; // Nombre maximal de munitions dans le chargeur
+    public int magazineCapacity = 5; // Nombre maximal de munitions dans le chargeur
     private int currentAmmo;                          // Munitions actuellement disponibles dans le chargeur
     
     // Nombre de tirs autorisés avant de devoir recharger l'arme (même si le chargeur n'est pas vide)
