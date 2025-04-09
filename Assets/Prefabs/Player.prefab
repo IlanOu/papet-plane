@@ -230,9 +230,14 @@ MonoBehaviour:
   animator: {fileID: 8806953914322309912}
   controller: {fileID: 7928427805321175698}
   spawnPoint: {fileID: 216315530705823994}
+  ballShooter: {fileID: 9081333767076049813}
   spriteRenderer: {fileID: 8305933001628268722}
   faceCamera: 0
   moveSpeed: 30
+  playerInversedIndex: 1
+  inverseControls: 1
+  reloadSpeedModifier: 0.8
+  reloadAnimationTrigger: Reload
 --- !u!114 &9081333767076049813
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -249,6 +254,11 @@ MonoBehaviour:
   spawnPoint: {fileID: 8615776852792341766}
   shootForce: 50
   playerCamera: {fileID: 4348699314664499575}
+  reloadTime: 3
+  reloadIndicatorTag: ReloadIndicator
+  reloading:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &6168564350565970421
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -401,7 +411,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 2084121571, guid: 6027d0c3a13911849b0d1c8245373b5a, type: 3}
+  m_Sprite: {fileID: 1957422433, guid: 702d5d14e2464334c97b196f77b8f28c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0

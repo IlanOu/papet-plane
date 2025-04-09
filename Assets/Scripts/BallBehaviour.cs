@@ -34,7 +34,6 @@ public class BallBehaviour : MonoBehaviour
         // Appliquer la logique de mise à jour du bonus
         if (bonus != null)
         {
-            Debug.Log("Update ball");
             bonus.UpdateBall(this);
         }
     }
