@@ -2,7 +2,6 @@
 public class BallBehaviour : MonoBehaviour
 {
     [SerializeField] private Transform quadTransform;
-    
     [HideInInspector] public float timer = 0;
     
     private Rigidbody rb;
@@ -11,11 +10,6 @@ public class BallBehaviour : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        
-        if (quadTransform == null)
-        {
-            quadTransform = transform.Find("DirectionQuad");
-        }
         
         // Appliquer le bonus à la balle
         if (bonus != null)
