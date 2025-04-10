@@ -16,40 +16,40 @@ namespace Multiplayer
         [SerializeField] private int maxPlayers = 4; // Paramètre pour le nombre max de joueurs
         [SerializeField] private Color[] teamColors = { Color.red, Color.blue };
     
-        private PlayerInputManager inputManager;
-        private Dictionary<int, int> playerTeams = new Dictionary<int, int>(); // playerIndex -> teamIndex
-        private int currentPlayerCount = 0;
+        private PlayerInputManager _inputManager;
+        private Dictionary<int, int> _playerTeams = new Dictionary<int, int>(); // playerIndex -> teamIndex
+        private int _currentPlayerCount = 0;
     
         void Awake()
         {
             // Créer le PlayerInputManager s'il n'existe pas
-            inputManager = FindObjectOfType<PlayerInputManager>();
-            if (inputManager == null)
+            _inputManager = FindObjectOfType<PlayerInputManager>();
+            if (_inputManager == null)
             {
-                inputManager = gameObject.AddComponent<PlayerInputManager>();
+                _inputManager = gameObject.AddComponent<PlayerInputManager>();
                 Debug.Log("PlayerInputManager ajouté automatiquement");
             }
         
             // Configuration basique
-            inputManager.playerPrefab = playerPrefab;
-            inputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
+            _inputManager.playerPrefab = playerPrefab;
+            _inputManager.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
         
             // Connecter les événements
-            inputManager.onPlayerJoined += OnPlayerJoined;
+            _inputManager.onPlayerJoined += OnPlayerJoined;
         
             Debug.Log($"MultiplayerSetup initialisé - Maximum {maxPlayers} joueurs - Appuyez sur une touche sur chaque manette pour rejoindre");
         }
     
         private void OnPlayerJoined(PlayerInput newPlayerInput)
         {
-            currentPlayerCount++;
+            _currentPlayerCount++;
         
             // Vérifier si le nombre maximum de joueurs est atteint
-            if (currentPlayerCount > maxPlayers)
+            if (_currentPlayerCount > maxPlayers)
             {
                 Debug.LogWarning($"Nombre maximum de joueurs atteint ({maxPlayers}). Joueur rejeté.");
                 Destroy(newPlayerInput.gameObject);
-                currentPlayerCount--;
+                _currentPlayerCount--;
             
                 // Désactiver temporairement la possibilité de rejoindre
                 StartCoroutine(TemporarilyDisableJoining());
@@ -80,13 +80,13 @@ namespace Multiplayer
                 {
                     Debug.LogWarning($"Toutes les équipes sont complètes. Joueur {playerIndex+1} rejeté.");
                     Destroy(newPlayerInput.gameObject);
-                    currentPlayerCount--;
+                    _currentPlayerCount--;
                     return;
                 }
             }
         
             // Assigner une équipe
-            playerTeams[playerIndex] = teamIndex;
+            _playerTeams[playerIndex] = teamIndex;
         
             // Configurer le PlayerController
             PlayerController controller = newPlayerInput.GetComponent<PlayerController>();
@@ -106,7 +106,6 @@ namespace Multiplayer
             if (spawnPoints != null && playerIndex < spawnPoints.Length)
             {
                 newPlayerInput.transform.position = spawnPoints[playerIndex].position;
-                // Debug.Log($"Joueur {playerIndex+1} placé à la position {spawnPoints[playerIndex].position}");
             }
             else
             {
@@ -114,9 +113,9 @@ namespace Multiplayer
             }
         
             // Si le nombre max est atteint, désactiver le joining
-            if (currentPlayerCount >= maxPlayers)
+            if (_currentPlayerCount >= maxPlayers)
             {
-                inputManager.DisableJoining();
+                _inputManager.DisableJoining();
                 Debug.Log("Nombre maximum de joueurs atteint, joining désactivé");
             }
         }
@@ -124,13 +123,13 @@ namespace Multiplayer
         // Coroutine pour réactiver temporairement le joining après rejet d'un joueur
         private System.Collections.IEnumerator TemporarilyDisableJoining()
         {
-            inputManager.DisableJoining();
+            _inputManager.DisableJoining();
             yield return new WaitForSeconds(1f);
         
             // Réactiver le joining si on n'a pas atteint le max
-            if (currentPlayerCount < maxPlayers)
+            if (_currentPlayerCount < maxPlayers)
             {
-                inputManager.EnableJoining();
+                _inputManager.EnableJoining();
             }
         }
     
@@ -138,7 +137,7 @@ namespace Multiplayer
         private int CountPlayersInTeam(int teamIndex)
         {
             int count = 0;
-            foreach (var kvp in playerTeams)
+            foreach (var kvp in _playerTeams)
             {
                 if (kvp.Value == teamIndex)
                     count++;
@@ -149,7 +148,7 @@ namespace Multiplayer
         // Méthode utilitaire pour obtenir l'équipe d'un joueur
         public int GetPlayerTeam(int playerIndex)
         {
-            if (playerTeams.TryGetValue(playerIndex, out int teamIndex))
+            if (_playerTeams.TryGetValue(playerIndex, out int teamIndex))
             {
                 return teamIndex;
             }
@@ -171,21 +170,21 @@ namespace Multiplayer
             int playerIndex = player.playerIndex;
         
             // Supprimer de la liste des équipes
-            if (playerTeams.ContainsKey(playerIndex))
+            if (_playerTeams.ContainsKey(playerIndex))
             {
-                playerTeams.Remove(playerIndex);
+                _playerTeams.Remove(playerIndex);
             }
         
-            currentPlayerCount--;
+            _currentPlayerCount--;
         
             // Réactiver le joining si nécessaire
-            if (currentPlayerCount < maxPlayers && !inputManager.joiningEnabled)
+            if (_currentPlayerCount < maxPlayers && !_inputManager.joiningEnabled)
             {
-                inputManager.EnableJoining();
+                _inputManager.EnableJoining();
                 Debug.Log("Place disponible, joining réactivé");
             }
         
-            Debug.Log($"Joueur {playerIndex+1} a quitté. Nombre de joueurs: {currentPlayerCount}");
+            Debug.Log($"Joueur {playerIndex+1} a quitté. Nombre de joueurs: {_currentPlayerCount}");
         }
     
         // Pour connecter cet événement dans Start

@@ -1,22 +1,30 @@
-﻿using Magazine;
+﻿using Spawning;
 using UnityEngine;
 
-public class MagazineTracker : MonoBehaviour
+public class MagazineTracker : MonoBehaviour, ISpawnable
 {
-    private MagazineSpawner _spawner;
+    private Spawner _spawner;
     private int _spawnPointIndex;
     
-    public void SetSpawner(MagazineSpawner spawner, int spawnPointIndex)
+    // Implémentation de la méthode Initialize de l'interface ISpawnable
+    public void Initialize(Spawner spawner, int spawnPointIndex)
     {
         _spawner = spawner;
         _spawnPointIndex = spawnPointIndex;
     }
     
-    private void OnDestroy()
+    // Implémentation de la méthode OnDespawn de l'interface ISpawnable
+    public void OnDespawn()
     {
         if (_spawner != null)
         {
-            _spawner.MagazineDestroyed(_spawnPointIndex);
+            _spawner.ObjectDespawned(_spawnPointIndex, gameObject);
         }
+    }
+    
+    // Appel de OnDespawn quand l'objet est détruit
+    private void OnDestroy()
+    {
+        OnDespawn();
     }
 }

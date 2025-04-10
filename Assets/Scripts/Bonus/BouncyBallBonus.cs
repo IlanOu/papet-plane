@@ -1,4 +1,5 @@
 ﻿using Projectile;
+using Spawning;
 using UnityEngine;
 
 namespace Bonus
@@ -38,5 +39,11 @@ namespace Bonus
         {
             // Ne rien faire, la balle continue d'exister après collision
         }
+
+        public override void Initialize(Spawner spawner, int spawnPointIndex) { }
+
+        public override void OnDespawn() { }
+
+        public override Color GetAuraColor() => Color.magenta;
     }
 }
