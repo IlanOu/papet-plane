@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Bonus;
+using Game;
 using Player;
 using UI;
 using UnityEngine;
