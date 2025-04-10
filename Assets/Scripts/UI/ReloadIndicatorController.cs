@@ -14,10 +14,12 @@ namespace UI
         [Header("Normal Ammo")]
         [SerializeField] private float normalOffsetX = 10f; // Espacement horizontal entre les sprites normaux
         [SerializeField] private float normalOffsetY = 0f;  // Espacement vertical entre les sprites normaux
+        [SerializeField] private Vector2 normalSizeMultiplier = new Vector2(1f, 1f); // Multiplicateur de taille pour munitions normales
         
         [Header("Charged Ammo")]
         [SerializeField] private float chargedOffsetX = 10f; // Espacement horizontal pour munitions chargées
         [SerializeField] private float chargedOffsetY = 5f;  // Espacement vertical pour munitions chargées
+        [SerializeField] private Vector2 chargedSizeMultiplier = new Vector2(1.2f, 1.2f); // Multiplicateur de taille pour munitions chargées
         
         [Header("Spacing Between Types")]
         [SerializeField] private float typeSeparationX = 15f; // Espace horizontal supplémentaire entre les types de munitions
@@ -30,6 +32,7 @@ namespace UI
         private Image[] ammoStackImages; // Tableau pour stocker les images de la pile de munitions
         private RectTransform rectTransform;
         private Vector2 originalPosition;
+        private Vector2 originalSize;
         private Transform stackParent; // Parent pour tous les sprites de la pile
         
         public int PlayerIndex => playerIndex;
@@ -39,6 +42,7 @@ namespace UI
             imageComponent = GetComponent<Image>();
             rectTransform = GetComponent<RectTransform>();
             originalPosition = rectTransform.anchoredPosition;
+            originalSize = rectTransform.sizeDelta;
             
             if (imageComponent == null)
             {
@@ -98,7 +102,7 @@ namespace UI
                 rt.anchorMin = new Vector2(0.5f, 0.5f);
                 rt.anchorMax = new Vector2(0.5f, 0.5f);
                 rt.pivot = new Vector2(0.5f, 0.5f);
-                rt.sizeDelta = rectTransform.sizeDelta;
+                rt.sizeDelta = originalSize; // Taille initiale identique à l'indicateur principal
                 
                 // Position initiale (sera mise à jour par UpdateAmmoDisplay)
                 rt.anchoredPosition = Vector2.zero; // Sera positionné relativement au parent
@@ -152,6 +156,11 @@ namespace UI
                             // Utiliser le dernier sprite pour les munitions chargées
                             ammoStackImages[i].sprite = reloadSprites[reloadSprites.Length - 1];
                             
+                            // Appliquer le multiplicateur de taille pour les munitions chargées
+                            rt.sizeDelta = new Vector2(
+                                originalSize.x * chargedSizeMultiplier.x,
+                                originalSize.y * chargedSizeMultiplier.y);
+                            
                             // Positionner les munitions chargées à partir du début
                             rt.anchoredPosition = new Vector2(
                                 chargedOffsetX * i,
@@ -161,6 +170,11 @@ namespace UI
                         {
                             // Utiliser le premier sprite pour les munitions non chargées
                             ammoStackImages[i].sprite = reloadSprites[0];
+                            
+                            // Appliquer le multiplicateur de taille pour les munitions normales
+                            rt.sizeDelta = new Vector2(
+                                originalSize.x * normalSizeMultiplier.x,
+                                originalSize.y * normalSizeMultiplier.y);
                             
                             // Ajouter l'espace entre les types et calculer la position relative
                             int indexAfterCharged = i - remainingChargedShots;
@@ -204,6 +218,13 @@ namespace UI
             {
                 imageComponent.sprite = reloadSprites[reloadSprites.Length - 1];
             }
+        }
+        
+        // Méthode pour définir la taille de l'indicateur principal
+        public void SetMainIndicatorSize(Vector2 newSize)
+        {
+            rectTransform.sizeDelta = newSize;
+            originalSize = newSize;
         }
     }
 }
