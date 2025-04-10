@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Audio;
 using Projectile;
 using UnityEngine;
 
@@ -17,6 +18,9 @@ namespace Player
         private Coroutine reloadCoroutine;
         [HideInInspector] public bool isCurrentlyReloading = false;
     
+        [Header("SFX")]
+        [SerializeField] private AudioClip reloadSFX;
+        
         private void Awake()
         {
             if (animationController == null)
@@ -37,6 +41,7 @@ namespace Player
             if (reloadCoroutine != null)
                 StopCoroutine(reloadCoroutine);
             
+            AudioManager.Play(reloadSFX);
             reloadCoroutine = StartCoroutine(PlayReloadAnimation(ballShooter.reloadTime));
         }
     

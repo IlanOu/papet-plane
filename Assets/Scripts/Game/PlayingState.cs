@@ -18,14 +18,17 @@ namespace Game
         {
             Debug.Log("Entrée dans l'état Playing");
         
-            // Configurer le jeu
-            _gameManager.SetupGame();
         
             // Régler le timeScale
             Time.timeScale = 1f;
         
-            // Afficher l'UI de jeu
-            _uiManager.ShowInGameMenu(true);
+            _uiManager.ShowInGameMenu(true, onComplete: () => _gameManager.SetupGame());
+            
+            // // Afficher l'UI de jeu
+            // _uiManager.ShowInGameMenu(true);
+            //
+            // // Configurer le jeu
+            // _gameManager.SetupGame();
         }
     
         public void Update()

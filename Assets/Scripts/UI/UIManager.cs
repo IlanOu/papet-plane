@@ -49,7 +49,7 @@ namespace UI
         /// <param name="newMenu">Le nouveau menu à afficher</param>
         /// <param name="fadeOutDuration">Durée du fade out du menu actuel</param>
         /// <param name="fadeInDuration">Durée du fade in du nouveau menu</param>
-        public IEnumerator TransitionBetweenMenus(GameObject newMenu, float fadeOutDuration, float fadeInDuration)
+        public IEnumerator TransitionBetweenMenus(GameObject newMenu, float fadeOutDuration, float fadeInDuration, System.Action onComplete = null)
         {
             // Si un menu est déjà affiché, réaliser un fade out
             if(currentMenu != null)
@@ -89,6 +89,8 @@ namespace UI
                 }
                 newCG.alpha = 1f;
             }
+            
+            onComplete?.Invoke();
         }
 
         #endregion
@@ -132,17 +134,19 @@ namespace UI
         /// <summary>
         /// Affiche le menu en jeu.
         /// </summary>
-        public void ShowInGameMenu(bool useTransition=false, float fadeOutDuration = 0.5f, float fadeInDuration = 0.5f)
+        public Coroutine ShowInGameMenu(bool useTransition=false, float fadeOutDuration = 0.5f, float fadeInDuration = 0.5f, System.Action onComplete = null)
         {
             if (useTransition)
             {
-                StartCoroutine(TransitionBetweenMenus(inGameMenu, fadeOutDuration, fadeInDuration));
+                return StartCoroutine(TransitionBetweenMenus(inGameMenu, fadeOutDuration, fadeInDuration, onComplete));
             }
             else
             {
                 HideAllMenus();
                 inGameMenu.SetActive(true);
                 currentMenu = inGameMenu;
+                onComplete?.Invoke();
+                return null;
             }
         }
 

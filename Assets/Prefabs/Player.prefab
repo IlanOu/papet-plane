@@ -406,6 +406,7 @@ MonoBehaviour:
   ballShooter: {fileID: 9081333767076049813}
   defaultReloadAnimationDuration: 2
   isCurrentlyReloading: 0
+  reloadSFX: {fileID: 8300000, guid: dd9ed772189355047bdb2cdaf02d9140, type: 3}
 --- !u!114 &6168564350565970421
 MonoBehaviour:
   m_ObjectHideFlags: 0
