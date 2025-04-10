@@ -34,5 +34,23 @@ namespace UI
             // Appliquer le sprite
             imageComponent.sprite = reloadSprites[frameIndex];
         }
+        
+        // Afficher la première frame
+        public void ShowFirstFrame()
+        {
+            if (reloadSprites != null && reloadSprites.Length > 0)
+            {
+                imageComponent.sprite = reloadSprites[0];
+            }
+        }
+
+        // Afficher la dernière frame
+        public void ShowLastFrame()
+        {
+            if (reloadSprites != null && reloadSprites.Length > 0)
+            {
+                imageComponent.sprite = reloadSprites[reloadSprites.Length - 1];
+            }
+        }
     }
 }

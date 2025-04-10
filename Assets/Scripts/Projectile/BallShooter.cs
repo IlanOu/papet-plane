@@ -96,7 +96,31 @@ namespace Projectile
         {
             if (_reloadIndicator != null)
             {
-                _reloadIndicator.gameObject.SetActive(false);
+                if (_currentAmmo <= 0)
+                {
+                    // Si plus de munitions, cacher complètement l'indicateur
+                    _reloadIndicator.gameObject.SetActive(false);
+                }
+                else if (_isCharged)
+                {
+                    // Si l'arme est chargée, afficher la dernière frame
+                    _reloadIndicator.gameObject.SetActive(true);
+                    _reloadIndicator.fillAmount = 1f;
+                    if (_indicatorController != null)
+                    {
+                        _indicatorController.ShowLastFrame();
+                    }
+                }
+                else
+                {
+                    // Si l'arme n'est pas chargée, afficher la première frame
+                    _reloadIndicator.gameObject.SetActive(true);
+                    _reloadIndicator.fillAmount = 0f;
+                    if (_indicatorController != null)
+                    {
+                        _indicatorController.ShowFirstFrame();
+                    }
+                }
             }
         }
     
@@ -137,6 +161,11 @@ namespace Projectile
                 _currentAmmo--;
                 Debug.Log($"Tir effectué ! Munitions restantes : {_currentAmmo}");
             
+                if (_currentAmmo <= 0)
+                {
+                    HideReloadIndicator();
+                }
+                
                 if (_shotsSinceLastReload >= shotsBeforeReload)
                 {
                     _isCharged = false;
@@ -256,7 +285,13 @@ namespace Projectile
     
         public void FillAmmo(int amount)
         {
+            bool wasEmpty = _currentAmmo <= 0;
             _currentAmmo = amount;
+            
+            if (wasEmpty && _currentAmmo > 0)
+            {
+                HideReloadIndicator();
+            }
         }
     }
 }
