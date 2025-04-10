@@ -125,7 +125,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.5, y: 1.5, z: 1.5}
+  m_LocalScale: {x: 1.4999999, y: 1.4999999, z: 1.4999999}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 7363059105996632402}
@@ -348,8 +348,8 @@ MonoBehaviour:
   spawnPoint: {fileID: 8615776852792341766}
   shootForce: 100
   playerCamera: {fileID: 4348699314664499575}
-  reloadTime: 3
-  magazineCapacity: 10
+  reloadTime: 1.5
+  magazineCapacity: 6
   shotsBeforeReload: 3
   reloadIndicatorTag: ReloadIndicator
   playerController: {fileID: 4057311952216209680}

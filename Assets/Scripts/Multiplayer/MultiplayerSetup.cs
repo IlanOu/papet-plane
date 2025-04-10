@@ -56,6 +56,8 @@ namespace Multiplayer
     
         private void OnPlayerJoined(PlayerInput newPlayerInput)
         {
+            GameManager.Instance.DisablePlayerScripts();
+            
             _currentPlayerCount++;
             _spawnedPlayers.Add(newPlayerInput.gameObject); // Ajouter à la liste des joueurs
         
@@ -254,6 +256,15 @@ namespace Multiplayer
         {
             CleanupAllPlayers();
             InitializeInputManager();
+        }
+        
+        public void DisableJoining()
+        {
+            if (_inputManager != null)
+            {
+                _inputManager.DisableJoining();
+                Debug.Log("Joining désactivé");
+            }
         }
     }
 }

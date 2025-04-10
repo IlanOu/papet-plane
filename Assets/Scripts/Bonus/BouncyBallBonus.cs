@@ -10,8 +10,9 @@ namespace Bonus
         
         [Tooltip("Durée de vie de l'avion en secondes")]
         public float lifeTime = 5f;
-
-        public float duration = 3f;
+        
+        [Tooltip("Durée de vie du bonus en secondes")]
+        public float duration = 30f;
         
         public override void ApplyTo(GameObject ball)
         {

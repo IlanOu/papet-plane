@@ -4,7 +4,6 @@ using UnityEngine;
 public class PowerUpBouncy : MonoBehaviour
 {
     [SerializeField] private float bounciness = 0.8f;
-    [SerializeField] private float lifeTime = 5f;
     
     private void OnTriggerEnter(Collider other)
     {

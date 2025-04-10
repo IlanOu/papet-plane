@@ -1,8 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Multiplayer;
+using Player;
 using UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public enum GameState
 {
@@ -24,14 +27,18 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject multiplayerManagerPrefab;
     private GameObject _multiplayerManager;
     
+    [SerializeField] private int requiredPlayerCount = 2;
+    
     public List<GameObject> instantiatedThings = new List<GameObject>();
     
-    // Propriétés privées
-    private GameState _currentState;
-    private bool _isRestarting = false;
+    // State Machine
+    private StateMachine _stateMachine;
     
-    // Propriétés publiques
-    public GameState CurrentState => _currentState;
+    // States
+    private MainMenuState _mainMenuState;
+    private PlayingState _playingState;
+    private PausedState _pausedState;
+    private GameOverState _gameOverState;
     
     private void Awake()
     {
@@ -47,85 +54,132 @@ public class GameManager : MonoBehaviour
             return;
         }
         
-        // Configuration initiale
-        SetGameState(GameState.MainMenu);
-        StartGame();
+        // Initialiser la state machine
+        InitializeStateMachine();
+    }
+    
+    private void Start()
+    {
+        // Créer le gestionnaire de multiplayer dès le départ
+        CreateMultiplayerManager();
+        
+        // Démarrer avec l'état MainMenu
+        _stateMachine.ChangeState(_mainMenuState);
     }
     
     private void Update()
     {
-        // Mise à jour selon l'état du jeu
-        switch (_currentState)
+        // Mettre à jour l'état actuel
+        _stateMachine.Update();
+    }
+    
+    private void InitializeStateMachine()
+    {
+        _stateMachine = new StateMachine();
+        
+        // Créer les états
+        _mainMenuState = new MainMenuState(this, uiManager);
+        _playingState = new PlayingState(this, uiManager);
+        _pausedState = new PausedState(this, uiManager);
+        _gameOverState = new GameOverState(this, uiManager);
+    }
+    
+    // Méthode pour créer le gestionnaire de multiplayer
+    private void CreateMultiplayerManager()
+    {
+        if (_multiplayerManager == null)
         {
-            case GameState.MainMenu:
-                uiManager.ShowMainMenu();
-                break;
-            case GameState.Playing:
-                uiManager.ShowInGameMenu();
-                break;
-            case GameState.Paused:
-                uiManager.ShowPauseMenu();
-                break;
-            case GameState.GameOver:
-                uiManager.ShowGameOverMenu();
-                break;
+            _multiplayerManager = Instantiate(multiplayerManagerPrefab);
+            RegisterInstantiatedObject(_multiplayerManager);
+            Debug.Log("Gestionnaire de multiplayer créé");
         }
     }
     
-    [ContextMenu("Start Game")]
-    // Méthodes principales de gestion du jeu
+    // Méthode pour obtenir le nombre de joueurs
+    public int GetPlayerCount()
+    {
+        return GameObject.FindGameObjectsWithTag("Player").Length;
+    }
+    
+    // Méthode pour désactiver les scripts des joueurs (pour le menu)
+    public void DisablePlayerScripts()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        foreach (GameObject player in players)
+        {
+            // Désactiver les contrôles de joueur mais garder le PlayerInput actif pour rejoindre
+            PlayerController controller = player.GetComponent<PlayerController>();
+            if (controller != null)
+            {
+                controller.enabled = false;
+            }
+            
+            // Désactiver d'autres scripts de gameplay
+            MonoBehaviour[] scripts = player.GetComponents<MonoBehaviour>();
+            foreach (MonoBehaviour script in scripts)
+            {
+                // Ne pas désactiver PlayerInput ni les scripts essentiels
+                if (!(script is PlayerInput) && !(script is MultiplayerSetup) && script.enabled)
+                {
+                    script.enabled = false;
+                }
+            }
+            
+            // Optionnel : Mettre les joueurs dans une position "d'attente" dans le menu
+            player.transform.position = new Vector3(player.transform.position.x, player.transform.position.y, 10f);
+            
+            Debug.Log($"Scripts désactivés pour le joueur: {player.name}");
+        }
+    }
+    
+    // Méthode pour activer les scripts des joueurs (pour le jeu)
+    public void EnablePlayerScripts()
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        foreach (GameObject player in players)
+        {
+            // Activer les contrôles de joueur
+            PlayerController controller = player.GetComponent<PlayerController>();
+            if (controller != null)
+            {
+                controller.enabled = true;
+            }
+            
+            // Activer d'autres scripts de gameplay
+            MonoBehaviour[] scripts = player.GetComponents<MonoBehaviour>();
+            foreach (MonoBehaviour script in scripts)
+            {
+                // Ne pas toucher aux scripts qui devraient rester désactivés
+                string scriptName = script.GetType().Name;
+                if (!(scriptName.Contains("Editor") || scriptName.Contains("Debug")))
+                {
+                    script.enabled = true;
+                }
+            }
+            
+            Debug.Log($"Scripts activés pour le joueur: {player.name}");
+        }
+    }
+    
+    // Transitions d'état
     public void StartGame()
     {
-        SetupGame();
-        SetGameState(GameState.Playing);
-        
-        // Informer l'UI
-        if (uiManager != null)
-        {
-            uiManager.ShowInGameMenu();
-        }
+        _stateMachine.ChangeState(_playingState);
     }
     
     public void PauseGame()
     {
-        if (_currentState == GameState.Playing)
-        {
-            SetGameState(GameState.Paused);
-            Time.timeScale = 0f;
-            
-            // Informer l'UI
-            if (uiManager != null)
-            {
-                uiManager.ShowPauseMenu();
-            }
-        }
+        _stateMachine.ChangeState(_pausedState);
     }
     
     public void ResumeGame()
     {
-        if (_currentState == GameState.Paused)
-        {
-            SetGameState(GameState.Playing);
-            Time.timeScale = 1f;
-            
-            // Informer l'UI
-            if (uiManager != null)
-            {
-                uiManager.ShowInGameMenu();
-            }
-        }
+        _stateMachine.ChangeState(_playingState);
     }
     
     public void EndGame()
     {
-        SetGameState(GameState.GameOver);
-        Time.timeScale = 1f;
-        
-        // Informer l'UI
-        if (uiManager != null)
-        {
-            uiManager.ShowGameOverMenu();
-        }
+        _stateMachine.ChangeState(_gameOverState);
     }
     
     public void ReturnToMainMenu()
@@ -136,22 +190,12 @@ public class GameManager : MonoBehaviour
     private IEnumerator CleanupAndReturnToMenu()
     {
         yield return StartCoroutine(CleanupGameCoroutine());
-        
-        SetGameState(GameState.MainMenu);
-        
-        // Informer l'UI
-        if (uiManager != null)
-        {
-            uiManager.ShowMainMenu();
-        }
+        _stateMachine.ChangeState(_mainMenuState);
     }
     
     [ContextMenu("Restart Game")]
     public void RestartGame()
     {
-        if (_isRestarting) return; // Éviter les redémarrages multiples
-        
-        _isRestarting = true;
         StartCoroutine(RestartGameCoroutine());
     }
     
@@ -164,31 +208,32 @@ public class GameManager : MonoBehaviour
         yield return null;
         
         // Redémarrer
-        SetupGame();
-        SetGameState(GameState.Playing);
-        
-        // Informer l'UI
-        if (uiManager != null)
-        {
-            uiManager.ShowInGameMenu();
-        }
-        
-        _isRestarting = false;
+        _stateMachine.ChangeState(_playingState);
     }
     
     // Méthodes internes
-    private void SetupGame()
+    public void SetupGame()
     {
-        // S'assurer qu'il n'y a pas déjà un gestionnaire de multiplayer
-        if (_multiplayerManager == null)
+        // Le MultiplayerManager est déjà créé dans le menu principal
+        // Vous pouvez ajouter ici d'autres initialisations spécifiques au jeu
+        
+        // Désactiver le joining dans MultiplayerSetup
+        if (_multiplayerManager != null)
         {
-            _multiplayerManager = Instantiate(multiplayerManagerPrefab);
-            Debug.Log("Gestionnaire de multiplayer créé");
+            MultiplayerSetup setup = _multiplayerManager.GetComponent<MultiplayerSetup>();
+            if (setup != null)
+            {
+                // Désactiver le joining pour ne plus accepter de nouveaux joueurs
+                setup.DisableJoining();
+            }
         }
+        
+        // Activer les scripts des joueurs pour le gameplay
+        EnablePlayerScripts();
     }
     
     [ContextMenu("Cleanup Game")]
-    private void CleanupGame()
+    public void CleanupGame()
     {
         StartCoroutine(CleanupGameCoroutine());
     }
@@ -196,6 +241,14 @@ public class GameManager : MonoBehaviour
     private IEnumerator CleanupGameCoroutine()
     {
         Debug.Log("Début du nettoyage du jeu");
+        
+        // Désactiver les scripts des joueurs pour le menu
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        foreach (GameObject player in players)
+        {
+            player.SetActive(false);
+            Destroy(player);
+        }
         
         // Désactiver le gestionnaire de multiplayer pour éviter qu'il ne crée de nouveaux joueurs
         if (_multiplayerManager != null)
@@ -205,12 +258,6 @@ public class GameManager : MonoBehaviour
             {
                 // Désactiver le script pour éviter qu'il ne continue à fonctionner pendant la destruction
                 setup.enabled = false;
-                
-                // Si vous avez ajouté la méthode CleanupAllPlayers, utilisez-la
-                if (setup.GetType().GetMethod("CleanupAllPlayers") != null)
-                {
-                    setup.SendMessage("CleanupAllPlayers");
-                }
             }
             
             // Désactiver l'objet avant de le détruire
@@ -219,24 +266,18 @@ public class GameManager : MonoBehaviour
             _multiplayerManager = null;
         }
         
-        // Détruire tous les joueurs dans la scène par tag
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-        foreach (GameObject player in players)
-        {
-            player.SetActive(false); // Désactiver d'abord
-            Destroy(player);
-        }
-        
-        // Détruire toutes les choses instanciées
+        // Détruire tous les objets de jeu (mais pas les joueurs)
         foreach (GameObject thing in instantiatedThings)
         {
-            if (thing != null)
+            if (thing != null && !thing.CompareTag("Player"))
             {
                 thing.SetActive(false); // Désactiver d'abord
                 Destroy(thing);
             }
         }
-        instantiatedThings.Clear();
+        
+        // Nettoyer la liste, en gardant les joueurs
+        instantiatedThings.RemoveAll(item => !item.CompareTag("Player") && item != null);
         
         // Attendre deux frames pour s'assurer que tout est bien détruit
         yield return null;
@@ -247,15 +288,9 @@ public class GameManager : MonoBehaviour
         System.GC.Collect();
         
         Debug.Log("Nettoyage du jeu terminé");
-    }
-    
-    private void SetGameState(GameState newState)
-    {
-        _currentState = newState;
-        Debug.Log($"État du jeu changé pour : {newState}");
         
-        // Déclencher l'événement de changement d'état
-        OnGameStateChanged?.Invoke(newState);
+        // Recréer le gestionnaire de multiplayer pour le menu principal
+        CreateMultiplayerManager();
     }
     
     // Méthode pour ajouter des objets instanciés à la liste de suivi
@@ -267,7 +302,196 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    // Événement pour le changement d'état
-    public delegate void GameStateChangedHandler(GameState newState);
-    public event GameStateChangedHandler OnGameStateChanged;
+    // Getters
+    public int RequiredPlayerCount => requiredPlayerCount;
+    public MultiplayerSetup GetMultiplayerSetup()
+    {
+        if (_multiplayerManager != null)
+        {
+            return _multiplayerManager.GetComponent<MultiplayerSetup>();
+        }
+        return null;
+    }
+}
+
+// State Machine de base
+public class StateMachine
+{
+    private IState _currentState;
+    
+    public void ChangeState(IState newState)
+    {
+        if (_currentState != null)
+        {
+            _currentState.Exit();
+        }
+        
+        _currentState = newState;
+        _currentState.Enter();
+    }
+    
+    public void Update()
+    {
+        if (_currentState != null)
+        {
+            _currentState.Update();
+        }
+    }
+}
+
+// Interface pour les états
+public interface IState
+{
+    void Enter();
+    void Update();
+    void Exit();
+}
+
+// Dans la classe MainMenuState, modifions la méthode Enter pour ne pas désactiver les scripts
+
+public class MainMenuState : IState
+{
+    private GameManager _gameManager;
+    private UIManager _uiManager;
+    private bool _gameStarting = false;
+    
+    public MainMenuState(GameManager gameManager, UIManager uiManager)
+    {
+        _gameManager = gameManager;
+        _uiManager = uiManager;
+    }
+    
+    public void Enter()
+    {
+        Debug.Log("Entrée dans l'état MainMenu");
+        _uiManager.ShowMainMenu();
+        _gameStarting = false;
+        
+        // Ne pas désactiver les scripts des joueurs ici
+        // Les joueurs n'ont pas encore rejoint le jeu
+    }
+    
+    public void Update()
+    {
+        // Vérifier si on a assez de joueurs pour démarrer automatiquement
+        if (!_gameStarting && _gameManager.GetPlayerCount() >= _gameManager.RequiredPlayerCount)
+        {
+            _gameStarting = true;
+            Debug.Log($"Nombre requis de joueurs atteint ({_gameManager.RequiredPlayerCount}). Démarrage du jeu...");
+            
+            // Démarrer le jeu après un court délai
+            _gameManager.Invoke("StartGame", 1.5f);
+        }
+    }
+    
+    public void Exit()
+    {
+        Debug.Log("Sortie de l'état MainMenu");
+    }
+}
+
+// État de jeu
+public class PlayingState : IState
+{
+    private GameManager _gameManager;
+    private UIManager _uiManager;
+    
+    public PlayingState(GameManager gameManager, UIManager uiManager)
+    {
+        _gameManager = gameManager;
+        _uiManager = uiManager;
+    }
+    
+    public void Enter()
+    {
+        Debug.Log("Entrée dans l'état Playing");
+        
+        // Configurer le jeu
+        _gameManager.SetupGame();
+        
+        // Régler le timeScale
+        Time.timeScale = 1f;
+        
+        // Afficher l'UI de jeu
+        _uiManager.ShowInGameMenu();
+    }
+    
+    public void Update()
+    {
+        // Logique de mise à jour du jeu
+        // Par exemple, vérifier les conditions de fin de jeu
+    }
+    
+    public void Exit()
+    {
+        Debug.Log("Sortie de l'état Playing");
+    }
+}
+
+// État de pause
+public class PausedState : IState
+{
+    private GameManager _gameManager;
+    private UIManager _uiManager;
+    
+    public PausedState(GameManager gameManager, UIManager uiManager)
+    {
+        _gameManager = gameManager;
+        _uiManager = uiManager;
+    }
+    
+    public void Enter()
+    {
+        Debug.Log("Entrée dans l'état Paused");
+        
+        // Mettre le jeu en pause
+        Time.timeScale = 0f;
+        
+        // Afficher le menu de pause
+        _uiManager.ShowPauseMenu();
+    }
+    
+    public void Update()
+    {
+        // Logique de mise à jour de la pause
+    }
+    
+    public void Exit()
+    {
+        Debug.Log("Sortie de l'état Paused");
+    }
+}
+
+// État de fin de jeu
+public class GameOverState : IState
+{
+    private GameManager _gameManager;
+    private UIManager _uiManager;
+    
+    public GameOverState(GameManager gameManager, UIManager uiManager)
+    {
+        _gameManager = gameManager;
+        _uiManager = uiManager;
+    }
+    
+    public void Enter()
+    {
+        Debug.Log("Entrée dans l'état GameOver");
+        
+        // S'assurer que le temps est normal
+        Time.timeScale = 1f;
+        
+        // Afficher l'écran de fin de jeu
+        _uiManager.ShowGameOverMenu();
+    }
+    
+    public void Update()
+    {
+        // Logique de mise à jour de l'écran de fin
+    }
+    
+    public void Exit()
+    {
+        Debug.Log("Sortie de l'état GameOver");
+    }
 }
