@@ -66,8 +66,16 @@ namespace Projectile
             FillAmmo(magazineCapacity);
             _isCharged = true;
             _shotsSinceLastReload = 0;
-            
+    
             FindReloadIndicator();
+    
+            // Initialiser la pile de munitions
+            if (_indicatorController != null)
+            {
+                _indicatorController.InitializeAmmoStack(magazineCapacity);
+                _indicatorController.UpdateAmmoDisplay(_currentAmmo, false, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
+            }
+    
             HideReloadIndicator();
         }
 
@@ -100,6 +108,12 @@ namespace Projectile
                 {
                     // Si plus de munitions, cacher complètement l'indicateur
                     _reloadIndicator.gameObject.SetActive(false);
+            
+                    // Mettre à jour l'affichage des munitions (toutes cachées)
+                    if (_indicatorController != null)
+                    {
+                        _indicatorController.UpdateAmmoDisplay(0, false, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
+                    }
                 }
                 else if (_isCharged)
                 {
@@ -109,6 +123,7 @@ namespace Projectile
                     if (_indicatorController != null)
                     {
                         _indicatorController.ShowLastFrame();
+                        _indicatorController.UpdateAmmoDisplay(_currentAmmo, false, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
                     }
                 }
                 else
@@ -119,11 +134,12 @@ namespace Projectile
                     if (_indicatorController != null)
                     {
                         _indicatorController.ShowFirstFrame();
+                        _indicatorController.UpdateAmmoDisplay(_currentAmmo, false, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
                     }
                 }
             }
         }
-    
+        
         private void ShowReloadIndicator()
         {
             if (_reloadIndicator != null)
@@ -141,35 +157,42 @@ namespace Projectile
             {
                 if (_isReloading)
                     return;
-            
+        
                 if (_currentAmmo <= 0)
                 {
                     Debug.Log("Chargeur vide, impossible de tirer !");
                     return;
                 }
-            
+        
                 if (!_isCharged)
                 {
                     Debug.Log("Le tir n'est pas chargé, recharge nécessaire.");
                     StartReload();
                     return;
                 }
-            
+        
                 FireBall();
-            
+        
                 _shotsSinceLastReload++;
                 _currentAmmo--;
                 Debug.Log($"Tir effectué ! Munitions restantes : {_currentAmmo}");
-            
+        
+                // Mettre à jour l'affichage des munitions après le tir
+                if (_indicatorController != null)
+                {
+                    _indicatorController.UpdateAmmoDisplay(_currentAmmo, false, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
+                }
+        
                 if (_currentAmmo <= 0)
                 {
-                    HideReloadIndicator();
+                    HideReloadIndicator(); // Cela cachera complètement l'indicateur
                 }
-                
+        
                 if (_shotsSinceLastReload >= shotsBeforeReload)
                 {
                     _isCharged = false;
                     Debug.Log("Nombre maximum de tirs atteint, recharge nécessaire pour préparer le tir suivant.");
+                    HideReloadIndicator(); // Mettre à jour l'affichage pour montrer la première frame
                 }
             }
         }
@@ -220,12 +243,18 @@ namespace Projectile
         private IEnumerator ReloadCoroutine()
         {
             float elapsedTime = 0f;
-        
+
+            // Mettre à jour l'affichage des munitions pour le mode rechargement
+            if (_indicatorController != null)
+            {
+                _indicatorController.UpdateAmmoDisplay(_currentAmmo, true, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
+            }
+    
             while (elapsedTime < reloadTime)
             {
                 elapsedTime += Time.deltaTime;
                 float progress = elapsedTime / reloadTime;
-            
+        
                 if (_reloadIndicator != null)
                 {
                     _reloadIndicator.fillAmount = progress;
@@ -234,16 +263,22 @@ namespace Projectile
                         _indicatorController.UpdateAnimation(progress);
                     }
                 }
-            
+        
                 yield return null;
             }
-        
+    
             // Fin du rechargement : le tir est prêt
             _isCharged = true;
             _isReloading = false;
             _shotsSinceLastReload = 0;
             Debug.Log("Tir chargé, prêt à tirer.");
-        
+    
+            // Remettre l'affichage des munitions en mode normal
+            if (_indicatorController != null)
+            {
+                _indicatorController.UpdateAmmoDisplay(_currentAmmo, false, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
+            }
+    
             HideReloadIndicator();
         }
     
@@ -253,6 +288,13 @@ namespace Projectile
             {
                 StopCoroutine(_reloadCoroutine);
                 _isReloading = false;
+        
+                // Remettre l'affichage des munitions en mode normal
+                if (_indicatorController != null)
+                {
+                    _indicatorController.UpdateAmmoDisplay(_currentAmmo, false, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
+                }
+        
                 HideReloadIndicator();
             }
         }
@@ -265,6 +307,12 @@ namespace Projectile
                 _isCharged = true;
                 _shotsSinceLastReload = 0;
                 Debug.Log("Recharge instantanée effectuée, tir chargé.");
+        
+                // Mettre à jour l'affichage des munitions
+                if (_indicatorController != null)
+                {
+                    _indicatorController.UpdateAmmoDisplay(_currentAmmo, false, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
+                }
             }
         }
     
@@ -287,10 +335,17 @@ namespace Projectile
         {
             bool wasEmpty = _currentAmmo <= 0;
             _currentAmmo = amount;
-            
+    
+            // Mettre à jour l'affichage des munitions
+            if (_indicatorController != null)
+            {
+                _indicatorController.UpdateAmmoDisplay(_currentAmmo, _isReloading, shotsBeforeReload, _isCharged, _shotsSinceLastReload);
+            }
+    
+            // Si on avait 0 munitions avant et qu'on en a maintenant, mettre à jour l'indicateur
             if (wasEmpty && _currentAmmo > 0)
             {
-                HideReloadIndicator();
+                HideReloadIndicator(); // Cette méthode affichera maintenant l'indicateur avec la frame appropriée
             }
         }
     }
