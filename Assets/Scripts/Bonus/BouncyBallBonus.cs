@@ -6,8 +6,12 @@ namespace Bonus
     public class BouncyBallBonus : BallBonus
     {
         public float bounciness = 0.8f;
+        
+        [Tooltip("Durée de vie de l'avion en secondes")]
         public float lifeTime = 5f;
-    
+
+        public float duration = 3f;
+        
         public override void ApplyTo(GameObject ball)
         {
             Collider collider = ball.GetComponent<Collider>();

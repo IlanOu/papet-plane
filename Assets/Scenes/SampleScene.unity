@@ -2227,7 +2227,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bounciness: 0.8
-  lifeTime: 5
+  lifeTime: 3
 --- !u!1 &255080407
 GameObject:
   m_ObjectHideFlags: 0

@@ -258,7 +258,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ballPrefab: {fileID: 6610942238174553923, guid: 844a3e7bc3eb1da4ca40eb79017658a9, type: 3}
   spawnPoint: {fileID: 8615776852792341766}
-  shootForce: 50
+  shootForce: 100
   playerCamera: {fileID: 4348699314664499575}
   reloadTime: 3
   magazineCapacity: 10
