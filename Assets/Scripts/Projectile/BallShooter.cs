@@ -147,11 +147,13 @@ namespace Projectile
         private void FireBall()
         {
             GameObject ball = Instantiate(ballPrefab, spawnPoint.position, Quaternion.identity);
+            GameManager.Instance.instantiatedThings.Add(ball);
             
             BallBehaviour ballBehaviour = ball.GetComponent<BallBehaviour>();
             if (ballBehaviour != null)
             {
                 ballBehaviour.SetBonus(_bonusManager.GetCurrentBonus());
+                ballBehaviour.ownerIndex = playerController.playerIndex;
             }
             
             Vector3 shootDirection = playerCamera.transform.forward;

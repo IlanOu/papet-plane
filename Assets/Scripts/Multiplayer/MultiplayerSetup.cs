@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -13,14 +14,27 @@ namespace Multiplayer
         [Header("Configuration des équipes")]
         [SerializeField] private int numberOfTeams = 2;
         [SerializeField] private int playersPerTeam = 1;
-        [SerializeField] private int maxPlayers = 4; // Paramètre pour le nombre max de joueurs
+        [SerializeField] private int maxPlayers = 4;
         [SerializeField] private Color[] teamColors = { Color.red, Color.blue };
     
         private PlayerInputManager _inputManager;
         private Dictionary<int, int> _playerTeams = new Dictionary<int, int>(); // playerIndex -> teamIndex
         private int _currentPlayerCount = 0;
+        private List<GameObject> _spawnedPlayers = new List<GameObject>(); // Garde une référence aux joueurs créés
     
-        void Awake()
+        private void Awake()
+        {
+            // Initialiser les collections
+            _playerTeams = new Dictionary<int, int>();
+            _spawnedPlayers = new List<GameObject>();
+        }
+    
+        void Start()
+        {
+            InitializeInputManager();
+        }
+        
+        private void InitializeInputManager()
         {
             // Créer le PlayerInputManager s'il n'existe pas
             _inputManager = FindObjectOfType<PlayerInputManager>();
@@ -43,11 +57,13 @@ namespace Multiplayer
         private void OnPlayerJoined(PlayerInput newPlayerInput)
         {
             _currentPlayerCount++;
+            _spawnedPlayers.Add(newPlayerInput.gameObject); // Ajouter à la liste des joueurs
         
             // Vérifier si le nombre maximum de joueurs est atteint
             if (_currentPlayerCount > maxPlayers)
             {
                 Debug.LogWarning($"Nombre maximum de joueurs atteint ({maxPlayers}). Joueur rejeté.");
+                _spawnedPlayers.Remove(newPlayerInput.gameObject); // Retirer de la liste avant destruction
                 Destroy(newPlayerInput.gameObject);
                 _currentPlayerCount--;
             
@@ -79,6 +95,7 @@ namespace Multiplayer
                 if (!foundTeam)
                 {
                     Debug.LogWarning($"Toutes les équipes sont complètes. Joueur {playerIndex+1} rejeté.");
+                    _spawnedPlayers.Remove(newPlayerInput.gameObject); // Retirer de la liste avant destruction
                     Destroy(newPlayerInput.gameObject);
                     _currentPlayerCount--;
                     return;
@@ -127,7 +144,7 @@ namespace Multiplayer
             yield return new WaitForSeconds(1f);
         
             // Réactiver le joining si on n'a pas atteint le max
-            if (_currentPlayerCount < maxPlayers)
+            if (_currentPlayerCount < maxPlayers && this != null && _inputManager != null)
             {
                 _inputManager.EnableJoining();
             }
@@ -174,11 +191,14 @@ namespace Multiplayer
             {
                 _playerTeams.Remove(playerIndex);
             }
-        
+            
+            // Supprimer de la liste des joueurs
+            _spawnedPlayers.Remove(player.gameObject);
+            
             _currentPlayerCount--;
         
             // Réactiver le joining si nécessaire
-            if (_currentPlayerCount < maxPlayers && !_inputManager.joiningEnabled)
+            if (_currentPlayerCount < maxPlayers && _inputManager != null && !_inputManager.joiningEnabled)
             {
                 _inputManager.EnableJoining();
                 Debug.Log("Place disponible, joining réactivé");
@@ -186,13 +206,54 @@ namespace Multiplayer
         
             Debug.Log($"Joueur {playerIndex+1} a quitté. Nombre de joueurs: {_currentPlayerCount}");
         }
-    
-        // Pour connecter cet événement dans Start
-        private void Start()
+        
+        // Méthode pour nettoyer tous les joueurs
+        public void CleanupAllPlayers()
         {
-            // Si le PlayerInputManager expose un événement onPlayerLeft, vous pouvez l'utiliser
-            // Sinon, vous devrez appeler OnPlayerLeft manuellement quand un joueur quitte
-            // inputManager.onPlayerLeft += OnPlayerLeft;
+            // Arrêter toutes les coroutines
+            StopAllCoroutines();
+            
+            // Désenregistrer l'événement pour éviter les callbacks après destruction
+            if (_inputManager != null)
+            {
+                _inputManager.onPlayerJoined -= OnPlayerJoined;
+            }
+            
+            // Détruire tous les joueurs
+            foreach (GameObject player in _spawnedPlayers.ToArray()) // Utiliser une copie pour éviter les problèmes de modification pendant l'itération
+            {
+                if (player != null)
+                {
+                    Destroy(player);
+                }
+            }
+            
+            // Vider les collections
+            _spawnedPlayers.Clear();
+            _playerTeams.Clear();
+            _currentPlayerCount = 0;
+            
+            Debug.Log("Tous les joueurs ont été nettoyés");
+        }
+        
+        // Appelé quand l'objet est détruit
+        private void OnDestroy()
+        {
+            // Désenregistrer l'événement pour éviter les fuites mémoire
+            if (_inputManager != null)
+            {
+                _inputManager.onPlayerJoined -= OnPlayerJoined;
+            }
+            
+            // Nettoyer les joueurs si ce n'est pas déjà fait
+            CleanupAllPlayers();
+        }
+        
+        // Méthode publique pour réinitialiser le système
+        public void Reset()
+        {
+            CleanupAllPlayers();
+            InitializeInputManager();
         }
     }
 }

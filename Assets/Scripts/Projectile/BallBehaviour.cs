@@ -7,6 +7,8 @@ namespace Projectile
         [SerializeField] private Transform quadTransform;
         [HideInInspector] public float timer = 0;
     
+        [HideInInspector] public int ownerIndex;
+        
         private Rigidbody rb;
         private BallBonus bonus;
     

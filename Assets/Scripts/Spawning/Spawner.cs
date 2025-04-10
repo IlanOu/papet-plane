@@ -79,6 +79,9 @@ namespace Spawning
                 {
                     int randomIndex = availableIndices[Random.Range(0, availableIndices.Count)];
                     GameObject spawnedObject = Instantiate(prefab, spawnPoints[randomIndex].position, Quaternion.identity);
+                    // Ajouter l'objet aux objets instanciés
+                    GameManager.Instance.instantiatedThings.Add(spawnedObject);
+                    
                     _occupiedSpawnPoints.Add(randomIndex);
                     _activeObjects.Add(spawnedObject);
                     
