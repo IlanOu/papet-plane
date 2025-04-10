@@ -14,15 +14,18 @@ namespace Game
     
         [Header("References")]
         [SerializeField] private UIManager uiManager;
-    
+        
         [Tooltip("Prefab du gestionnaire de multiplayer")]
         [SerializeField] private GameObject multiplayerManagerPrefab;
         private GameObject _multiplayerManager;
     
         [SerializeField] private int requiredPlayerCount = 2;
-    
+        
         public List<GameObject> instantiatedThings = new List<GameObject>();
     
+        [Header("Parameters")]
+        public Color[] teamColors = { Color.red, Color.blue };
+        
         // State Machine
         private StateMachine _stateMachine;
     

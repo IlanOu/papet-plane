@@ -25,7 +25,7 @@ namespace Game
             Time.timeScale = 1f;
         
             // Afficher l'UI de jeu
-            _uiManager.ShowInGameMenu();
+            _uiManager.ShowInGameMenu(true);
         }
     
         public void Update()

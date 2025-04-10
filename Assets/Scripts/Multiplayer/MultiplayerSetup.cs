@@ -16,7 +16,7 @@ namespace Multiplayer
         [SerializeField] private int numberOfTeams = 2;
         [SerializeField] private int playersPerTeam = 1;
         [SerializeField] private int maxPlayers = 4;
-        [SerializeField] private Color[] teamColors = { Color.red, Color.blue };
+        private Color[] _teamColors;
     
         private PlayerInputManager _inputManager;
         private Dictionary<int, int> _playerTeams = new Dictionary<int, int>(); // playerIndex -> teamIndex
@@ -32,6 +32,7 @@ namespace Multiplayer
     
         void Start()
         {
+            _teamColors = GameManager.Instance.teamColors;
             InitializeInputManager();
         }
         
@@ -115,10 +116,10 @@ namespace Multiplayer
                 controller.InitPlayer(playerIndex);
             
                 // Appliquer la couleur de l'équipe
-                if (controller.spriteRenderer != null && teamIndex < teamColors.Length)
+                if (controller.spriteRenderer != null && teamIndex < _teamColors.Length)
                 {
-                    controller.spriteRenderer.material.color = teamColors[teamIndex];
-                    Debug.Log($"Joueur {playerIndex+1} assigné à l'équipe {teamIndex+1} (couleur: {teamColors[teamIndex]})");
+                    controller.spriteRenderer.material.color = _teamColors[teamIndex];
+                    Debug.Log($"Joueur {playerIndex+1} assigné à l'équipe {teamIndex+1} (couleur: {_teamColors[teamIndex]})");
                 }
             }
         
