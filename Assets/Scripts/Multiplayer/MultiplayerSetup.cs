@@ -106,7 +106,7 @@ namespace Multiplayer
             if (spawnPoints != null && playerIndex < spawnPoints.Length)
             {
                 newPlayerInput.transform.position = spawnPoints[playerIndex].position;
-                Debug.Log($"Joueur {playerIndex+1} placé à la position {spawnPoints[playerIndex].position}");
+                // Debug.Log($"Joueur {playerIndex+1} placé à la position {spawnPoints[playerIndex].position}");
             }
             else
             {

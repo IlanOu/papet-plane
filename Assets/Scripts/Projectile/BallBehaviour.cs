@@ -50,7 +50,7 @@ namespace Projectile
                 if (horizontalVelocity.magnitude > 0.01f)
                 {
                     float angleY = Mathf.Atan2(horizontalVelocity.x, horizontalVelocity.z) * Mathf.Rad2Deg;
-                    quadTransform.rotation = Quaternion.Euler(90, angleY-90, 0);
+                    quadTransform.rotation = Quaternion.Euler(90, angleY, 0);
                 }
             }
         }

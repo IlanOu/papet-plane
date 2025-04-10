@@ -12,7 +12,10 @@ namespace Player
 
         [Header("Paramètres")]
         public int maxLife = 3;
+        public int hitDamage = 1;
+        
         private int _currentLife;
+        
         
         [Header("Events")]
         public UnityEvent<int, int> onLifeChanged; // Envoie currentLife, maxLife
@@ -49,6 +52,11 @@ namespace Player
             else
             {
                 Debug.LogError($"LifeUI non trouvée pour le joueur {playerController.playerIndex}");
+            }   
+            
+            if (playerHit != null)
+            {
+                playerHit.onHit.AddListener(() => TakeDamage(hitDamage));
             }
         }
         

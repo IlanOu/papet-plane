@@ -1,29 +1,30 @@
 ﻿using System;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 namespace Player
 {
     public class PlayerHit : MonoBehaviour
     {
-        
         [Header("Composants")]
         [SerializeField] private PlayerController playerController;
         
         [Header("Events")]
-        public UnityEvent onCollisionEnter;
+        public UnityEvent onHit;
 
         private void Awake()
         {
             if (playerController == null)
                 playerController = GetComponent<PlayerController>();
         }
-        
-        private void OnCollisionEnter(Collision other)
+
+        private void OnTriggerEnter(Collider other)
         {
             if (other.gameObject.CompareTag("Plane"))
             {
-                onCollisionEnter.Invoke();
+                onHit.Invoke();
+                Destroy(other.gameObject);
             }
         }
     }
