@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Magazine;
+using UnityEngine;
 
 public class MagazineTracker : MonoBehaviour
 {

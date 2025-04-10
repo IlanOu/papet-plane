@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Bonus;
+using UnityEngine;
 
 public class PowerUpBouncy : MonoBehaviour
 {

@@ -1,28 +1,31 @@
 ﻿using UnityEngine;
 
-public class BonusManager : MonoBehaviour
+namespace Bonus
 {
-    private BallBonus currentBonus;
-    private DefaultBallBonus defaultBonus;
-    
-    void Awake()
+    public class BonusManager : MonoBehaviour
     {
-        defaultBonus = new DefaultBallBonus();
-        currentBonus = defaultBonus;
-    }
+        private BallBonus currentBonus;
+        private DefaultBallBonus defaultBonus;
     
-    public void ActivateBonus(BallBonus bonus)
-    {
-        currentBonus = bonus;
-    }
+        void Awake()
+        {
+            defaultBonus = new DefaultBallBonus();
+            currentBonus = defaultBonus;
+        }
     
-    public void ResetBonus()
-    {
-        currentBonus = defaultBonus;
-    }
+        public void ActivateBonus(BallBonus bonus)
+        {
+            currentBonus = bonus;
+        }
     
-    public BallBonus GetCurrentBonus()
-    {
-        return currentBonus;
+        public void ResetBonus()
+        {
+            currentBonus = defaultBonus;
+        }
+    
+        public BallBonus GetCurrentBonus()
+        {
+            return currentBonus;
+        }
     }
 }

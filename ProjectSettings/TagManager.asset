@@ -7,6 +7,7 @@ TagManager:
   - ReloadIndicator
   - Magazine
   - Plane
+  - LifeUI
   layers:
   - Default
   - TransparentFX

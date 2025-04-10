@@ -1,252 +1,259 @@
 ﻿using System.Collections;
+using Bonus;
+using Player;
+using UI;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class BallShooter : MonoBehaviour
+namespace Projectile
 {
-    [Header("Ball Settings")]
-    [SerializeField] private GameObject ballPrefab;
-    [SerializeField] private Transform spawnPoint;
-    [SerializeField] private float shootForce = 10f;
+    public class BallShooter : MonoBehaviour
+    {
+        [Header("Ball Settings")]
+        [SerializeField] private GameObject ballPrefab;
+        [SerializeField] private Transform spawnPoint;
+        [SerializeField] private float shootForce = 10f;
     
-    [Header("Camera")]
-    [SerializeField] private GameObject playerCamera;
+        [Header("Camera")]
+        [SerializeField] private GameObject playerCamera;
     
-    [Header("Reload Settings")]
-    [SerializeField] private float reloadTime = 3f; // Durée du rechargement (chargement du tir)
+        [Header("Reload Settings")]
+        public float reloadTime = 3f; // Durée du rechargement (chargement du tir)
     
-    [Header("Ammo Settings")]
-    public int magazineCapacity = 5; // Nombre maximal de munitions dans le chargeur
-    private int currentAmmo;                          // Munitions actuellement disponibles dans le chargeur
+        [Header("Ammo Settings")]
+        public int magazineCapacity = 5; // Nombre maximal de munitions dans le chargeur
+        private int _currentAmmo;                          // Munitions actuellement disponibles dans le chargeur
     
-    // Nombre de tirs autorisés avant de devoir recharger l'arme (même si le chargeur n'est pas vide)
-    [SerializeField] private int shotsBeforeReload = 1;
-    // Compteur de tirs effectués depuis la dernière recharge (état "chargé")
-    private int shotsSinceLastReload = 0;
+        // Nombre de tirs autorisés avant de devoir recharger l'arme (même si le chargeur n'est pas vide)
+        [SerializeField] private int shotsBeforeReload = 1;
+        // Compteur de tirs effectués depuis la dernière recharge (état "chargé")
+        private int _shotsSinceLastReload = 0;
     
-    // État indiquant si le tir est préparé (après l'animation de recharge)
-    private bool isCharged = false;
+        // État indiquant si le tir est préparé (après l'animation de recharge)
+        private bool _isCharged = false;
     
-    [Header("UI References")]
-    [SerializeField] private string reloadIndicatorTag = "ReloadIndicator"; // Tag utilisé pour trouver l'indicateur de rechargement
+        [Header("UI References")]
+        [SerializeField] private string reloadIndicatorTag = "ReloadIndicator"; // Tag utilisé pour trouver l'indicateur de rechargement
     
-    private BonusManager bonusManager;
-    private bool isReloading = false; // Indique si le processus de recharge est en cours
-    private Coroutine reloadCoroutine;
-    private int playerIndex; // Index du joueur (0 pour joueur 1, 1 pour joueur 2, etc.)
-    private PlayerInput playerInput;
-    private Image reloadIndicator; // Référence à l'indicateur pour ce joueur
-    private ReloadIndicatorController indicatorController; // Contrôleur pour l'animation de l'indicateur
+        private BonusManager _bonusManager;
+        private bool _isReloading = false; // Indique si le processus de recharge est en cours
+        private Coroutine _reloadCoroutine;
 
-    public UnityEvent reloading;
-    
-    private void Awake()
-    {
-        // Au démarrage, on remplit le chargeur et on considère que l'arme est chargée
-        FillAmmo(magazineCapacity);
-        isCharged = true;
-        shotsSinceLastReload = 0;
+        private Image _reloadIndicator; // Référence à l'indicateur pour ce joueur
+        private ReloadIndicatorController _indicatorController; // Contrôleur pour l'animation de l'indicateur
 
-        bonusManager = GetComponent<BonusManager>();
-        if (bonusManager == null)
-        {
-            bonusManager = gameObject.AddComponent<BonusManager>();
-        }
-        playerInput = GetComponent<PlayerInput>();
-        if (playerInput != null)
-        {
-            playerIndex = playerInput.playerIndex;
-            Debug.Log($"BallShooter initialisé pour le joueur {playerIndex + 1}");
-        }
-        FindReloadIndicator();
-        HideReloadIndicator();
-    }
-
-    private void FindReloadIndicator()
-    {
-        GameObject[] indicators = GameObject.FindGameObjectsWithTag(reloadIndicatorTag);
+        [SerializeField] PlayerController playerController;
         
-        foreach (GameObject indicator in indicators)
+        [HideInInspector] public UnityEvent reloading;
+    
+        private void Awake()
         {
-            ReloadIndicatorController controller = indicator.GetComponent<ReloadIndicatorController>();
-            if (controller != null && controller.PlayerIndex == playerIndex)
+            _bonusManager = GetComponent<BonusManager>();
+            if (_bonusManager == null)
             {
-                reloadIndicator = indicator.GetComponent<Image>();
-                indicatorController = controller;
-                break;
-            }
-        }
-        
-        if (reloadIndicator == null)
-        {
-            Debug.LogWarning($"Aucun indicateur de rechargement trouvé pour le joueur {playerIndex}");
-        }
-    }
-    
-    private void HideReloadIndicator()
-    {
-        if (reloadIndicator != null)
-        {
-            reloadIndicator.gameObject.SetActive(false);
-        }
-    }
-    
-    private void ShowReloadIndicator()
-    {
-        if (reloadIndicator != null)
-        {
-            reloading.Invoke();
-            reloadIndicator.gameObject.SetActive(true);
-            reloadIndicator.fillAmount = 0f;
-        }
-    }
-    
-    // Méthode appelée par l'Input pour tirer
-    public void Shoot(InputAction.CallbackContext context)
-    {
-        if (context.performed)
-        {
-            if (isReloading)
-                return;
-            
-            if (currentAmmo <= 0)
-            {
-                Debug.Log("Chargeur vide, impossible de tirer !");
-                return;
+                _bonusManager = gameObject.AddComponent<BonusManager>();
             }
             
-            if (!isCharged)
-            {
-                Debug.Log("Le tir n'est pas chargé, recharge nécessaire.");
-                StartReload();
-                return;
-            }
-            
-            FireBall();
-            
-            shotsSinceLastReload++;
-            currentAmmo--;
-            Debug.Log($"Tir effectué ! Munitions restantes : {currentAmmo}");
-            
-            if (shotsSinceLastReload >= shotsBeforeReload)
-            {
-                isCharged = false;
-                Debug.Log("Nombre maximum de tirs atteint, recharge nécessaire pour préparer le tir suivant.");
-            }
-        }
-    }
-    
-    private void FireBall()
-    {
-        GameObject ball = Instantiate(ballPrefab, spawnPoint.position, Quaternion.identity);
-            
-        BallBehaviour ballBehaviour = ball.GetComponent<BallBehaviour>();
-        if (ballBehaviour != null)
-        {
-            ballBehaviour.SetBonus(bonusManager.GetCurrentBonus());
-        }
-            
-        Vector3 shootDirection = playerCamera.transform.forward;
-            
-        Rigidbody rb = ball.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            rb.AddForce(shootDirection * shootForce, ForceMode.Impulse);
-            
-            Transform quadTransform = ball.transform.Find("DirectionQuad");
-            if (quadTransform != null)
-            {
-                OrientQuad(quadTransform, shootDirection);
-            }
-        }
-    }
-    
-    private void StartReload()
-    {
-        if (currentAmmo <= 0)
-        {
-            Debug.Log("Impossible de recharger, chargeur vide.");
-            return;
+            if (playerController == null)
+                playerController = GetComponent<PlayerController>();
         }
         
-        if (!isReloading)
-        {
-            isReloading = true;
-            ShowReloadIndicator();
-            reloadCoroutine = StartCoroutine(ReloadCoroutine());
-        }
-    }
-
-    private IEnumerator ReloadCoroutine()
-    {
-        float elapsedTime = 0f;
-        
-        while (elapsedTime < reloadTime)
-        {
-            elapsedTime += Time.deltaTime;
-            float progress = elapsedTime / reloadTime;
+        private void Start()
+        {   
+            FillAmmo(magazineCapacity);
+            _isCharged = true;
+            _shotsSinceLastReload = 0;
             
-            if (reloadIndicator != null)
-            {
-                reloadIndicator.fillAmount = progress;
-                if (indicatorController != null)
-                {
-                    indicatorController.UpdateAnimation(progress);
-                }
-            }
-            
-            yield return null;
-        }
-        
-        // Fin du rechargement : le tir est prêt
-        isCharged = true;
-        isReloading = false;
-        shotsSinceLastReload = 0;
-        Debug.Log("Tir chargé, prêt à tirer.");
-        
-        HideReloadIndicator();
-    }
-    
-    public void CancelReload()
-    {
-        if (isReloading && reloadCoroutine != null)
-        {
-            StopCoroutine(reloadCoroutine);
-            isReloading = false;
+            FindReloadIndicator();
             HideReloadIndicator();
         }
-    }
-    
-    public void InstantReload()
-    {
-        CancelReload();
-        if (currentAmmo > 0)
+
+        private void FindReloadIndicator()
         {
-            isCharged = true;
-            shotsSinceLastReload = 0;
-            Debug.Log("Recharge instantanée effectuée, tir chargé.");
+            GameObject[] indicators = GameObject.FindGameObjectsWithTag(reloadIndicatorTag);
+        
+            foreach (GameObject indicator in indicators)
+            {
+                ReloadIndicatorController controller = indicator.GetComponent<ReloadIndicatorController>();
+                if (controller != null && controller.PlayerIndex == playerController.playerIndex)
+                {
+                    _reloadIndicator = indicator.GetComponent<Image>();
+                    _indicatorController = controller;
+                    break;
+                }
+            }
+        
+            if (_reloadIndicator == null)
+            {
+                Debug.LogWarning($"Aucun indicateur de rechargement trouvé pour le joueur {playerController.playerIndex}");
+            }
         }
-    }
     
-    private void OrientQuad(Transform quadTransform, Vector3 direction)
-    {
-        Quaternion originalRotation = quadTransform.rotation;
-        quadTransform.rotation = Quaternion.LookRotation(direction);
-        Vector3 eulerAngles = quadTransform.eulerAngles;
-        quadTransform.eulerAngles = new Vector3(originalRotation.eulerAngles.x, eulerAngles.y, originalRotation.eulerAngles.z);
-    }
+        private void HideReloadIndicator()
+        {
+            if (_reloadIndicator != null)
+            {
+                _reloadIndicator.gameObject.SetActive(false);
+            }
+        }
     
-    public float GetReloadTime() => reloadTime;
+        private void ShowReloadIndicator()
+        {
+            if (_reloadIndicator != null)
+            {
+                reloading.Invoke();
+                _reloadIndicator.gameObject.SetActive(true);
+                _reloadIndicator.fillAmount = 0f;
+            }
+        }
     
-    // Retourne true si le tir est préparé (chargé)
-    public bool IsLoaded() => isCharged;
+        // Méthode appelée par l'Input pour tirer
+        public void Shoot(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+            {
+                if (_isReloading)
+                    return;
+            
+                if (_currentAmmo <= 0)
+                {
+                    Debug.Log("Chargeur vide, impossible de tirer !");
+                    return;
+                }
+            
+                if (!_isCharged)
+                {
+                    Debug.Log("Le tir n'est pas chargé, recharge nécessaire.");
+                    StartReload();
+                    return;
+                }
+            
+                FireBall();
+            
+                _shotsSinceLastReload++;
+                _currentAmmo--;
+                Debug.Log($"Tir effectué ! Munitions restantes : {_currentAmmo}");
+            
+                if (_shotsSinceLastReload >= shotsBeforeReload)
+                {
+                    _isCharged = false;
+                    Debug.Log("Nombre maximum de tirs atteint, recharge nécessaire pour préparer le tir suivant.");
+                }
+            }
+        }
     
-    public bool IsReloading() => isReloading;
+        private void FireBall()
+        {
+            GameObject ball = Instantiate(ballPrefab, spawnPoint.position, Quaternion.identity);
+            
+            BallBehaviour ballBehaviour = ball.GetComponent<BallBehaviour>();
+            if (ballBehaviour != null)
+            {
+                ballBehaviour.SetBonus(_bonusManager.GetCurrentBonus());
+            }
+            
+            Vector3 shootDirection = playerCamera.transform.forward;
+            
+            Rigidbody rb = ball.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.AddForce(shootDirection * shootForce, ForceMode.Impulse);
+            
+                Transform quadTransform = ball.transform.Find("DirectionQuad");
+                if (quadTransform != null)
+                {
+                    OrientQuad(quadTransform, shootDirection);
+                }
+            }
+        }
     
-    public void FillAmmo(int amount)
-    {
-        currentAmmo = amount;
+        private void StartReload()
+        {
+            if (_currentAmmo <= 0)
+            {
+                Debug.Log("Impossible de recharger, chargeur vide.");
+                return;
+            }
+        
+            if (!_isReloading)
+            {
+                _isReloading = true;
+                ShowReloadIndicator();
+                _reloadCoroutine = StartCoroutine(ReloadCoroutine());
+            }
+        }
+
+        private IEnumerator ReloadCoroutine()
+        {
+            float elapsedTime = 0f;
+        
+            while (elapsedTime < reloadTime)
+            {
+                elapsedTime += Time.deltaTime;
+                float progress = elapsedTime / reloadTime;
+            
+                if (_reloadIndicator != null)
+                {
+                    _reloadIndicator.fillAmount = progress;
+                    if (_indicatorController != null)
+                    {
+                        _indicatorController.UpdateAnimation(progress);
+                    }
+                }
+            
+                yield return null;
+            }
+        
+            // Fin du rechargement : le tir est prêt
+            _isCharged = true;
+            _isReloading = false;
+            _shotsSinceLastReload = 0;
+            Debug.Log("Tir chargé, prêt à tirer.");
+        
+            HideReloadIndicator();
+        }
+    
+        public void CancelReload()
+        {
+            if (_isReloading && _reloadCoroutine != null)
+            {
+                StopCoroutine(_reloadCoroutine);
+                _isReloading = false;
+                HideReloadIndicator();
+            }
+        }
+    
+        public void InstantReload()
+        {
+            CancelReload();
+            if (_currentAmmo > 0)
+            {
+                _isCharged = true;
+                _shotsSinceLastReload = 0;
+                Debug.Log("Recharge instantanée effectuée, tir chargé.");
+            }
+        }
+    
+        private void OrientQuad(Transform quadTransform, Vector3 direction)
+        {
+            Quaternion originalRotation = quadTransform.rotation;
+            quadTransform.rotation = Quaternion.LookRotation(direction);
+            Vector3 eulerAngles = quadTransform.eulerAngles;
+            quadTransform.eulerAngles = new Vector3(originalRotation.eulerAngles.x, eulerAngles.y, originalRotation.eulerAngles.z);
+        }
+    
+        public float GetReloadTime() => reloadTime;
+    
+        // Retourne true si le tir est préparé (chargé)
+        public bool IsLoaded() => _isCharged;
+    
+        public bool IsReloading() => _isReloading;
+    
+        public void FillAmmo(int amount)
+        {
+            _currentAmmo = amount;
+        }
     }
 }

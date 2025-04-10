@@ -1,20 +1,24 @@
 ﻿using UnityEngine;
 
-public class PlayerPickup : MonoBehaviour
+namespace Player
 {
-    private PlayerController playerController;
-    
-    private void Awake()
+    public class PlayerPickup : MonoBehaviour
     {
-        playerController = GetComponent<PlayerController>();
-    }
+        [SerializeField] private PlayerController playerController;
     
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Magazine"))
+        private void Awake()
         {
-            playerController.ballShooter.FillAmmo(playerController.ballShooter.magazineCapacity);
-            Destroy(other.gameObject);
+            if (playerController == null)
+                playerController = GetComponent<PlayerController>();
+        }
+    
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.CompareTag("Magazine"))
+            {
+                playerController.ballShooter.FillAmmo(playerController.ballShooter.magazineCapacity);
+                Destroy(other.gameObject);
+            }
         }
     }
 }
