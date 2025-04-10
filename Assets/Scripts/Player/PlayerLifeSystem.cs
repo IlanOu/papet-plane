@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Game;
 using UI;
 using UnityEngine;
 using UnityEngine.Events;
@@ -29,18 +30,27 @@ namespace Player
         [Tooltip("Nombre de meilleurs points de spawn à considérer")]
         [SerializeField] private int topSpawnPointsToConsider = 3;
         
+        [Header("Game Over")]
+        [Tooltip("Nombre de vies perdues avant Game Over")]
+        [SerializeField] private int livesBeforeGameOver = 3;
+        [Tooltip("Délai avant de passer à l'écran Game Over (en secondes)")]
+        [SerializeField] private float gameOverDelay = 2f;
+        
         private int _currentLife;
+        private int _livesLost = 0; // Compteur de vies perdues
         private bool _isInvincible = false;
         private List<Transform> _respawnPoints = new List<Transform>();
         
         [Header("Events")]
         public UnityEvent<int, int> onLifeChanged; // Envoie currentLife, maxLife
         public UnityEvent onRespawn; // Déclenché quand le joueur réapparaît
+        public UnityEvent onGameOver; // Déclenché quand le joueur n'a plus de vies
         
         [Header("Indicator")]
         public string lifeUITag = "LifeUI";
         
         private LifeUI _lifeUI;
+        private bool _gameOverTriggered = false;
         
         private void Awake()
         {
@@ -54,6 +64,8 @@ namespace Player
             FindRespawnPoints();
             
             ResetLife();
+            _livesLost = 0;
+            _gameOverTriggered = false;
         }
         
         private void Start()
@@ -111,23 +123,69 @@ namespace Player
         
         public void TakeDamage(int damage)
         {
-            // Ignorer les dégâts si invincible
-            if (_isInvincible)
+            // Ignorer les dégâts si invincible ou si GameOver déjà déclenché
+            if (_isInvincible || _gameOverTriggered)
                 return;
                 
             _currentLife -= damage;
             onLifeChanged?.Invoke(_currentLife, maxLife);
             
-            // Réapparaître à un point de spawn approprié
-            RespawnAtSafestPoint();
-            
             if (_currentLife <= 0)
             {
-                // En option : implémentation de mort définitive
-                // playerController.KillPlayer();
+                _livesLost++;
+                Debug.Log($"Joueur {playerController.playerIndex} a perdu une vie. Vies perdues: {_livesLost}/{livesBeforeGameOver}");
                 
-                // Ou réinitialiser la vie
-                ResetLife();
+                if (_livesLost >= livesBeforeGameOver)
+                {
+                    // Plus de vies, déclencher le Game Over
+                    TriggerGameOver();
+                }
+                else
+                {
+                    // Il reste des vies, réinitialiser la vie et réapparaître
+                    ResetLife();
+                    RespawnAtSafestPoint();
+                }
+            }
+            else
+            {
+                // Encore de la vie, juste réapparaître
+                RespawnAtSafestPoint();
+            }
+        }
+        
+        private void TriggerGameOver()
+        {
+            if (_gameOverTriggered)
+                return;
+                
+            _gameOverTriggered = true;
+            
+            // Désactiver les contrôles du joueur
+            if (playerController != null)
+            {
+                playerController.enabled = false;
+            }
+            
+            // Jouer une animation de mort si disponible
+            // ...
+            
+            // Déclencher le Game Over après un délai
+            StartCoroutine(GameOverCoroutine());
+        }
+        
+        private System.Collections.IEnumerator GameOverCoroutine()
+        {
+            // Attendre le délai avant de passer à l'écran Game Over
+            yield return new WaitForSeconds(gameOverDelay);
+            
+            // Déclencher l'événement onGameOver
+            onGameOver?.Invoke();
+            
+            // Transition vers l'état GameOver du GameManager
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.EndGame();
             }
         }
         
@@ -227,7 +285,6 @@ namespace Player
             }
             
             // Calculer le score de sécurité pour chaque point de spawn
-            // (distance totale par rapport à tous les autres joueurs)
             Dictionary<Transform, float> spawnPointScores = new Dictionary<Transform, float>();
             
             foreach (Transform spawnPoint in _respawnPoints)
@@ -314,6 +371,26 @@ namespace Player
         {
             maxLife = life;
             onLifeChanged?.Invoke(_currentLife, maxLife);
+        }
+        
+        // Réinitialiser complètement le joueur (pour un nouveau jeu)
+        public void ResetPlayer()
+        {
+            ResetLife();
+            _livesLost = 0;
+            _gameOverTriggered = false;
+            
+            // Réactiver les contrôles du joueur
+            if (playerController != null)
+            {
+                playerController.enabled = true;
+            }
+            
+            // S'assurer que le joueur est visible
+            if (playerController.spriteRenderer != null)
+            {
+                playerController.spriteRenderer.enabled = true;
+            }
         }
         
         private LifeUI FindLifeUI()

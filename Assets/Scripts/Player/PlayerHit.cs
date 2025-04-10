@@ -24,8 +24,23 @@ namespace Player
         {
             if (other.gameObject.CompareTag("Plane"))
             {
+                Debug.Log("[PlayerHit] Player hit plane");
                 if (other.GetComponent<BallBehaviour>() != null)
-                    if (playerController.playerIndex == other.GetComponent<BallBehaviour>().ownerIndex) return;
+                {
+                    if (playerController.playerIndex == other.GetComponent<BallBehaviour>().ownerIndex)
+                    {
+                        return;
+                    }
+                }
+
+                if (other.GetComponentInParent<BallBehaviour>() != null)
+                {
+                    if (playerController.playerIndex == other.GetComponentInParent<BallBehaviour>().ownerIndex)
+                    {
+                        return;
+                    }
+                    
+                }
                 
                 onHit.Invoke();
                 Destroy(other.gameObject);
