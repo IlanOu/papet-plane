@@ -1,4 +1,5 @@
-﻿using UI;
+﻿using System.Collections.Generic;
+using UI;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -14,11 +15,27 @@ namespace Player
         public int maxLife = 3;
         public int hitDamage = 1;
         
-        private int _currentLife;
+        [Header("Respawn")]
+        [Tooltip("Tag des points de réapparition")]
+        [SerializeField] private string respawnPointTag = "RespawnPoint";
+        [Tooltip("Tag des joueurs pour éviter les spawnkills")]
+        [SerializeField] private string playerTag = "Player";
+        [Tooltip("Délai avant réapparition (en secondes)")]
+        [SerializeField] private float respawnDelay = 0.5f;
+        [Tooltip("Effet visuel lors de la réapparition")]
+        [SerializeField] private GameObject respawnEffectPrefab;
+        [Tooltip("Durée d'invincibilité après réapparition (en secondes)")]
+        [SerializeField] private float invincibilityDuration = 1.5f;
+        [Tooltip("Nombre de meilleurs points de spawn à considérer")]
+        [SerializeField] private int topSpawnPointsToConsider = 3;
         
+        private int _currentLife;
+        private bool _isInvincible = false;
+        private List<Transform> _respawnPoints = new List<Transform>();
         
         [Header("Events")]
         public UnityEvent<int, int> onLifeChanged; // Envoie currentLife, maxLife
+        public UnityEvent onRespawn; // Déclenché quand le joueur réapparaît
         
         [Header("Indicator")]
         public string lifeUITag = "LifeUI";
@@ -32,6 +49,9 @@ namespace Player
             
             if (playerHit == null)
                 playerHit = GetComponent<PlayerHit>();
+            
+            // Trouver tous les points de respawn
+            FindRespawnPoints();
             
             ResetLife();
         }
@@ -69,16 +89,197 @@ namespace Player
             }
         }
         
+        private void FindRespawnPoints()
+        {
+            _respawnPoints.Clear();
+            GameObject[] respawnObjects = GameObject.FindGameObjectsWithTag(respawnPointTag);
+            
+            foreach (GameObject respawnObj in respawnObjects)
+            {
+                _respawnPoints.Add(respawnObj.transform);
+            }
+            
+            if (_respawnPoints.Count == 0)
+            {
+                Debug.LogWarning($"Aucun point de respawn trouvé avec le tag {respawnPointTag}");
+            }
+            else
+            {
+                Debug.Log($"Trouvé {_respawnPoints.Count} points de respawn");
+            }
+        }
+        
         public void TakeDamage(int damage)
         {
+            // Ignorer les dégâts si invincible
+            if (_isInvincible)
+                return;
+                
             _currentLife -= damage;
             onLifeChanged?.Invoke(_currentLife, maxLife);
             
+            // Réapparaître à un point de spawn approprié
+            RespawnAtSafestPoint();
+            
             if (_currentLife <= 0)
             {
-                // Kill player
+                // En option : implémentation de mort définitive
                 // playerController.KillPlayer();
+                
+                // Ou réinitialiser la vie
+                ResetLife();
             }
+        }
+        
+        private void RespawnAtSafestPoint()
+        {
+            // Vérifier s'il y a des points de respawn disponibles
+            if (_respawnPoints.Count == 0)
+            {
+                Debug.LogWarning("Tentative de respawn mais aucun point n'est disponible");
+                return;
+            }
+            
+            // Désactiver temporairement les contrôles du joueur
+            if (playerController != null)
+            {
+                playerController.enabled = false;
+            }
+            
+            // Commencer le processus de réapparition
+            StartCoroutine(RespawnCoroutine());
+        }
+        
+        private System.Collections.IEnumerator RespawnCoroutine()
+        {
+            // Rendre le joueur invisible ou jouer une animation de disparition
+            if (playerController.spriteRenderer != null)
+            {
+                playerController.spriteRenderer.enabled = false;
+            }
+            
+            // Désactiver les collisions pendant la réapparition
+            Collider2D playerCollider = GetComponent<Collider2D>();
+            if (playerCollider != null)
+            {
+                playerCollider.enabled = false;
+            }
+            
+            // Attendre le délai de réapparition
+            yield return new WaitForSeconds(respawnDelay);
+            
+            // Trouver le point de respawn le plus sûr
+            Transform respawnPoint = FindSafestRespawnPoint();
+            
+            // Déplacer le joueur au point de respawn
+            transform.position = respawnPoint.position;
+            
+            // Rendre le joueur à nouveau visible
+            if (playerController.spriteRenderer != null)
+            {
+                playerController.spriteRenderer.enabled = true;
+            }
+            
+            // Réactiver les collisions
+            if (playerCollider != null)
+            {
+                playerCollider.enabled = true;
+            }
+            
+            // Jouer un effet de réapparition si disponible
+            if (respawnEffectPrefab != null)
+            {
+                Instantiate(respawnEffectPrefab, transform.position, Quaternion.identity);
+            }
+            
+            // Réactiver les contrôles du joueur
+            if (playerController != null)
+            {
+                playerController.enabled = true;
+            }
+            
+            // Déclencher l'événement de réapparition
+            onRespawn?.Invoke();
+            
+            // Activer l'invincibilité temporaire
+            StartCoroutine(TemporaryInvincibility());
+        }
+        
+        private Transform FindSafestRespawnPoint()
+        {
+            // Trouver tous les autres joueurs
+            GameObject[] otherPlayers = GameObject.FindGameObjectsWithTag(playerTag);
+            List<GameObject> players = new List<GameObject>();
+            
+            // Exclure ce joueur de la liste
+            foreach (GameObject player in otherPlayers)
+            {
+                if (player != this.gameObject)
+                {
+                    players.Add(player);
+                }
+            }
+            
+            // S'il n'y a pas d'autres joueurs, choisir un point aléatoire
+            if (players.Count == 0)
+            {
+                return _respawnPoints[Random.Range(0, _respawnPoints.Count)];
+            }
+            
+            // Calculer le score de sécurité pour chaque point de spawn
+            // (distance totale par rapport à tous les autres joueurs)
+            Dictionary<Transform, float> spawnPointScores = new Dictionary<Transform, float>();
+            
+            foreach (Transform spawnPoint in _respawnPoints)
+            {
+                float totalDistance = 0f;
+                
+                foreach (GameObject player in players)
+                {
+                    float distance = Vector3.Distance(spawnPoint.position, player.transform.position);
+                    totalDistance += distance;
+                }
+                
+                spawnPointScores[spawnPoint] = totalDistance;
+            }
+            
+            // Trier les points de spawn par score (du plus élevé au plus bas)
+            List<KeyValuePair<Transform, float>> sortedSpawnPoints = new List<KeyValuePair<Transform, float>>(spawnPointScores);
+            sortedSpawnPoints.Sort((a, b) => b.Value.CompareTo(a.Value));
+            
+            // Sélectionner aléatoirement un des meilleurs points de spawn
+            int maxIndex = Mathf.Min(topSpawnPointsToConsider, sortedSpawnPoints.Count);
+            int randomIndex = Random.Range(0, maxIndex);
+            
+            Transform selectedSpawnPoint = sortedSpawnPoints[randomIndex].Key;
+            
+            Debug.Log($"Sélectionné le point de spawn {selectedSpawnPoint.name} avec un score de sécurité de {sortedSpawnPoints[randomIndex].Value}");
+            
+            return selectedSpawnPoint;
+        }
+        
+        private System.Collections.IEnumerator TemporaryInvincibility()
+        {
+            _isInvincible = true;
+            
+            // Effet visuel d'invincibilité (clignotement)
+            if (playerController.spriteRenderer != null)
+            {
+                float endTime = Time.time + invincibilityDuration;
+                while (Time.time < endTime)
+                {
+                    playerController.spriteRenderer.enabled = !playerController.spriteRenderer.enabled;
+                    yield return new WaitForSeconds(0.1f);
+                }
+                playerController.spriteRenderer.enabled = true;
+            }
+            else
+            {
+                // Si pas de sprite renderer, juste attendre
+                yield return new WaitForSeconds(invincibilityDuration);
+            }
+            
+            _isInvincible = false;
         }
         
         public void Heal(int amount)
