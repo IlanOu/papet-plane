@@ -33,7 +33,7 @@ public class BallShooter : MonoBehaviour
     [SerializeField] private string reloadIndicatorTag = "ReloadIndicator"; // Tag utilisé pour trouver l'indicateur de rechargement
     
     private BonusManager bonusManager;
-    private bool isReloading = false; // Indique si le processus de recharge (charge du tir) est en cours
+    private bool isReloading = false; // Indique si le processus de recharge est en cours
     private Coroutine reloadCoroutine;
     private int playerIndex; // Index du joueur (0 pour joueur 1, 1 pour joueur 2, etc.)
     private PlayerInput playerInput;
@@ -46,11 +46,9 @@ public class BallShooter : MonoBehaviour
     {
         // Au démarrage, on remplit le chargeur et on considère que l'arme est chargée
         FillAmmo(magazineCapacity);
-        // L'arme démarre en "charged" et aucun tir n'a été effectué
         isCharged = true;
         shotsSinceLastReload = 0;
 
-        // Récupération (ou ajout) du BonusManager
         bonusManager = GetComponent<BonusManager>();
         if (bonusManager == null)
         {
@@ -68,12 +66,10 @@ public class BallShooter : MonoBehaviour
 
     private void FindReloadIndicator()
     {
-        // Recherche de tous les indicateurs dans la scène portant le tag spécifié
         GameObject[] indicators = GameObject.FindGameObjectsWithTag(reloadIndicatorTag);
         
         foreach (GameObject indicator in indicators)
         {
-            // Vérifier si cet indicateur correspond au joueur courant
             ReloadIndicatorController controller = indicator.GetComponent<ReloadIndicatorController>();
             if (controller != null && controller.PlayerIndex == playerIndex)
             {
@@ -101,10 +97,9 @@ public class BallShooter : MonoBehaviour
     {
         if (reloadIndicator != null)
         {
-            // On invoque l'événement pour signaler le début du processus de recharge (charge du tir)
             reloading.Invoke();
             reloadIndicator.gameObject.SetActive(true);
-            reloadIndicator.fillAmount = 0f; // Réinitialise l'indicateur
+            reloadIndicator.fillAmount = 0f;
         }
     }
     
@@ -113,18 +108,15 @@ public class BallShooter : MonoBehaviour
     {
         if (context.performed)
         {
-            // Si une recharge (animation de charge) est en cours, on ignore l'action
             if (isReloading)
                 return;
             
-            // Si le chargeur est vide, le joueur ne peut plus tirer
             if (currentAmmo <= 0)
             {
                 Debug.Log("Chargeur vide, impossible de tirer !");
                 return;
             }
             
-            // Si le tir n'est pas chargé, il faut lancer la recharge (animation de charge)
             if (!isCharged)
             {
                 Debug.Log("Le tir n'est pas chargé, recharge nécessaire.");
@@ -132,15 +124,12 @@ public class BallShooter : MonoBehaviour
                 return;
             }
             
-            // Le tir est chargé : procéder au tir
             FireBall();
             
-            // Incrémenter le compteur et décrémenter le chargeur
             shotsSinceLastReload++;
             currentAmmo--;
             Debug.Log($"Tir effectué ! Munitions restantes : {currentAmmo}");
             
-            // Si le nombre de tirs consécutifs atteint le seuil, l'arme perd son état chargé
             if (shotsSinceLastReload >= shotsBeforeReload)
             {
                 isCharged = false;
@@ -149,28 +138,23 @@ public class BallShooter : MonoBehaviour
         }
     }
     
-    // Instanciation et lancement de la balle
     private void FireBall()
     {
         GameObject ball = Instantiate(ballPrefab, spawnPoint.position, Quaternion.identity);
             
-        // Appliquer le bonus actuel
         BallBehaviour ballBehaviour = ball.GetComponent<BallBehaviour>();
         if (ballBehaviour != null)
         {
             ballBehaviour.SetBonus(bonusManager.GetCurrentBonus());
         }
             
-        // Déterminer la direction du tir d'après la caméra
         Vector3 shootDirection = playerCamera.transform.forward;
             
-        // Appliquer la force au Rigidbody
         Rigidbody rb = ball.GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.AddForce(shootDirection * shootForce, ForceMode.Impulse);
             
-            // Orienter le quad pour l'effet visuel
             Transform quadTransform = ball.transform.Find("DirectionQuad");
             if (quadTransform != null)
             {
@@ -179,10 +163,8 @@ public class BallShooter : MonoBehaviour
         }
     }
     
-    // Démarre la procédure de recharge (charge du tir)
     private void StartReload()
     {
-        // Ne pas lancer la recharge si le chargeur est vide
         if (currentAmmo <= 0)
         {
             Debug.Log("Impossible de recharger, chargeur vide.");
@@ -206,7 +188,6 @@ public class BallShooter : MonoBehaviour
             elapsedTime += Time.deltaTime;
             float progress = elapsedTime / reloadTime;
             
-            // Mise à jour de l'indicateur visuel
             if (reloadIndicator != null)
             {
                 reloadIndicator.fillAmount = progress;
@@ -219,10 +200,9 @@ public class BallShooter : MonoBehaviour
             yield return null;
         }
         
-        // Fin de l'animation de charge : le tir est désormais prêt
+        // Fin du rechargement : le tir est prêt
         isCharged = true;
         isReloading = false;
-        // Réinitialiser le compteur pour permettre une suite de tirs (tant que le chargeur n'est pas vidé)
         shotsSinceLastReload = 0;
         Debug.Log("Tir chargé, prêt à tirer.");
         
@@ -242,7 +222,6 @@ public class BallShooter : MonoBehaviour
     public void InstantReload()
     {
         CancelReload();
-        // Si le chargeur n'est pas vide, on met à jour l'état chargé
         if (currentAmmo > 0)
         {
             isCharged = true;
@@ -255,25 +234,19 @@ public class BallShooter : MonoBehaviour
     {
         Quaternion originalRotation = quadTransform.rotation;
         quadTransform.rotation = Quaternion.LookRotation(direction);
-        // Conserver certaines rotations initiales pour X et Z
         Vector3 eulerAngles = quadTransform.eulerAngles;
         quadTransform.eulerAngles = new Vector3(originalRotation.eulerAngles.x, eulerAngles.y, originalRotation.eulerAngles.z);
     }
     
-    public float GetReloadTime()
-    {
-        return reloadTime;
-    }
+    public float GetReloadTime() => reloadTime;
     
     // Retourne true si le tir est préparé (chargé)
-    public bool IsLoaded()
-    {
-        return isCharged;
-    }
+    public bool IsLoaded() => isCharged;
+    
+    public bool IsReloading() => isReloading;
     
     public void FillAmmo(int amount)
     {
         currentAmmo = amount;
-        // isCharged = false;
     }
 }

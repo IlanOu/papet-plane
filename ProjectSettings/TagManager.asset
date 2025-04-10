@@ -6,6 +6,7 @@ TagManager:
   tags:
   - ReloadIndicator
   - Magazine
+  - Plane
   layers:
   - Default
   - TransparentFX
