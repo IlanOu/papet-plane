@@ -134,6 +134,8 @@ namespace Player
             Debug.Log($"Joueur prend {damage} dégâts. Vie: {_currentLife}/{maxLife}");
             onLifeChanged?.Invoke(_currentLife, maxLife);
 
+            ControllerVibration.VibrateStrong(playerController.playerIndex);
+            
             if (_currentLife <= 0)
             {
                 // Déclencher directement le Game Over quand la vie atteint 0

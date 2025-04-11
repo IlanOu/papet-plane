@@ -16,6 +16,7 @@ namespace Player
         {
             if (other.CompareTag("Magazine"))
             {
+                ControllerVibration.VibrateMedium(playerController.playerIndex, 0.5f);
                 playerController.ballShooter.FillAmmo(playerController.ballShooter.magazineCapacity);
                 Destroy(other.gameObject);
             }

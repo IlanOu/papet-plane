@@ -1,4 +1,5 @@
 ﻿using Bonus;
+using Player;
 using UnityEngine;
 
 public class PowerUpBouncy : MonoBehaviour
@@ -24,6 +25,8 @@ public class PowerUpBouncy : MonoBehaviour
                 BouncyBallBonus bonus = new BouncyBallBonus();
                 // Configurer le bonus
                 bonusManager.ActivateBonus(bonus);
+                if (other.GetComponent<PlayerController>() != null)
+                    ControllerVibration.VibrateMedium(other.GetComponent<PlayerController>().playerIndex, 0.5f);
                 Destroy(gameObject);
             }
         }

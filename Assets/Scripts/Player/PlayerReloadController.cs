@@ -44,8 +44,23 @@ namespace Player
             
             AudioManager.Play(reloadSFX, reloadSFXVolume);
             reloadCoroutine = StartCoroutine(PlayReloadAnimation(ballShooter.reloadTime));
+            StartCoroutine(ReloadVibration());
         }
     
+        private IEnumerator ReloadVibration()
+        {
+            if (GetComponent<PlayerController>() == null)
+                yield break;
+            int playerIdx = GetComponent<PlayerController>().playerIndex;
+    
+            // Plusieurs petites vibrations pendant le rechargement
+            for (int i = 0; i < 4; i++)
+            {
+                yield return new WaitForSeconds(0.5f);
+                ControllerVibration.VibrateMedium(playerIdx, 0.1f);
+            }
+        }
+        
         private IEnumerator PlayReloadAnimation(float reloadTime)
         {
             // Calculer le facteur de vitesse pour que l'animation Reload dure exactement ballShooter.reloadTime secondes.

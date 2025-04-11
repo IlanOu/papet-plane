@@ -207,6 +207,8 @@ namespace Projectile
         {
             GameManager.Instance.lastTimeInput = Time.time;
             
+            ControllerVibration.VibrateLight(playerController.playerIndex, 0.1f);
+            
             // Randomply Play audio clip for shoot in list shootSFX
             int randomIndex = Random.Range(0, shootSFX.Count);
             AudioManager.Play(shootSFX[randomIndex], shootSFXVolume);
