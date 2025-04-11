@@ -166,9 +166,9 @@ namespace Player
                 else if (lastDirectionState == "down")
                     ChangeAnimationState(usePlaneIdle ? ANIM_IDLE_PLANE_UP : ANIM_IDLE_UP);
                 else if (lastDirectionState == "left")
-                    ChangeAnimationState(usePlaneIdle ? ANIM_IDLE_PLANE_RIGHT : ANIM_IDLE_RIGHT);
-                else if (lastDirectionState == "right")
                     ChangeAnimationState(usePlaneIdle ? ANIM_IDLE_PLANE_LEFT : ANIM_IDLE_LEFT);
+                else if (lastDirectionState == "right")
+                    ChangeAnimationState(usePlaneIdle ? ANIM_IDLE_PLANE_RIGHT : ANIM_IDLE_RIGHT);
                 else
                     ChangeAnimationState(usePlaneIdle ? ANIM_IDLE_PLANE_UP : ANIM_IDLE_UP);
             }
