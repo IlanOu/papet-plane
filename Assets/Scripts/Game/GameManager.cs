@@ -23,6 +23,8 @@ namespace Game
         
         public List<GameObject> instantiatedThings = new List<GameObject>();
     
+        public int winnerIndex = -1;
+        
         [Header("Parameters")]
         public Color[] teamColors = { Color.red, Color.blue };
         

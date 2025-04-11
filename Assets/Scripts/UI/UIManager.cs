@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -21,6 +22,12 @@ namespace UI
         [Tooltip("Images qui auront la couleur du joueur 2")]
         [SerializeField] private Image[] imagePlayer2;
 
+        [Header("Win Screen Configs")]
+        [SerializeField] private List<GameObject> displayForP1Winner;
+        [SerializeField] private List<GameObject> displayForP2Winner;
+        [SerializeField] private List<GameObject> displayForP1Loser;
+        [SerializeField] private List<GameObject> displayForP2Loser;
+        
         // Référence au menu actuellement affiché
         private GameObject currentMenu;
 
@@ -170,8 +177,30 @@ namespace UI
         /// <summary>
         /// Affiche le menu Game Over.
         /// </summary>
-        public void ShowGameOverMenu(bool useTransition=false, float fadeOutDuration = 0.5f, float fadeInDuration = 0.5f)
+        public void ShowGameOverMenu(bool useTransition=false, float fadeOutDuration = 0.5f, float fadeInDuration = 0.5f, int winnerIndex = -1)
         {
+            if (winnerIndex == -1)
+            {
+                Debug.LogError("Le joueur gagnant doit avoir un index.");
+            }
+            
+            foreach (var displayP1W in displayForP1Winner)
+            {
+                displayP1W.SetActive(winnerIndex == 0);
+            }
+            foreach (var displayP2W in displayForP2Winner)
+            {
+                displayP2W.SetActive(winnerIndex == 1);
+            }
+            foreach (var displayP1L in displayForP1Loser)
+            {
+                displayP1L.SetActive(winnerIndex == 1);
+            }
+            foreach (var displayP2L in displayForP2Loser)
+            {
+                displayP2L.SetActive(winnerIndex == 0);
+            }
+            
             if (useTransition)
             {
                 StartCoroutine(TransitionBetweenMenus(gameOverMenu, fadeOutDuration, fadeInDuration));
@@ -186,44 +215,64 @@ namespace UI
 
         #endregion
 
-        #region Méthodes pour les boutons
+        #region Messages
 
-        public void OnStartButtonClicked()
+        [Header("Messages")]
+        [SerializeField] private TextMeshProUGUI menuMessageText;
+        [SerializeField] private GameObject messagePanel; // Le panneau contenant le texte
+
+        /// <summary>
+        /// Définit le message affiché dans le menu principal.
+        /// Si le message est vide ou null, le panneau sera caché.
+        /// </summary>
+        /// <param name="message">Le message à afficher</param>
+        public void SetMenuMessage(string message)
         {
-            GameManager.Instance.StartGame();
-        }
+            if (menuMessageText != null)
+            {
+                // Vérifier si le message est vide
+                bool hasMessage = !string.IsNullOrEmpty(message);
         
-        public void OnPauseButtonClicked()
-        {
-            GameManager.Instance.PauseGame();
-        }
+                // Mettre à jour le texte si nécessaire
+                if (hasMessage)
+                {
+                    menuMessageText.text = message;
+                }
         
-        public void OnResumeButtonClicked()
-        {
-            GameManager.Instance.ResumeGame();
+                // Afficher ou cacher le panneau
+                if (messagePanel != null)
+                {
+                    messagePanel.SetActive(hasMessage);
+                }
+                else
+                {
+                    // Si pas de panneau défini, gérer juste la visibilité du texte
+                    menuMessageText.gameObject.SetActive(hasMessage);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("menuMessageText n'est pas assigné dans l'inspecteur.");
+            }
         }
-        
-        public void OnRestartButtonClicked()
+
+        /// <summary>
+        /// Cache le panneau de message.
+        /// </summary>
+        public void HideMessagePanel()
         {
-            GameManager.Instance.RestartGame();
-        }
-        
-        public void OnMainMenuButtonClicked()
-        {
-            GameManager.Instance.ReturnToMainMenu();
-        }
-        
-        public void OnQuitButtonClicked()
-        {
-            #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-            #else
-            Application.Quit();
-            #endif
+            if (messagePanel != null)
+            {
+                messagePanel.SetActive(false);
+            }
+            else if (menuMessageText != null)
+            {
+                menuMessageText.gameObject.SetActive(false);
+            }
         }
 
         #endregion
-
+        
         #region Méthode utilitaire pour masquer tous les menus
 
         /// <summary>

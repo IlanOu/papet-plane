@@ -16,6 +16,8 @@ namespace Player
         public int maxLife = 3;
         public int hitDamage = 1;
         
+        [SerializeField] private float hitInvincibilityDuration = 0.5f; 
+        
         [Header("Respawn")]
         [Tooltip("Tag des points de réapparition")]
         [SerializeField] private string respawnPointTag = "RespawnPoint";
@@ -23,8 +25,7 @@ namespace Player
         [SerializeField] private string playerTag = "Player";
         [Tooltip("Délai avant réapparition (en secondes)")]
         [SerializeField] private float respawnDelay = 0.5f;
-        [Tooltip("Effet visuel lors de la réapparition")]
-        [SerializeField] private GameObject respawnEffectPrefab;
+
         [Tooltip("Durée d'invincibilité après réapparition (en secondes)")]
         [SerializeField] private float invincibilityDuration = 1.5f;
         [Tooltip("Nombre de meilleurs points de spawn à considérer")]
@@ -36,8 +37,9 @@ namespace Player
         [Tooltip("Délai avant de passer à l'écran Game Over (en secondes)")]
         [SerializeField] private float gameOverDelay = 2f;
         
+        private bool _isHitInProgress = false;
+        
         private int _currentLife;
-        private int _livesLost = 0; // Compteur de vies perdues
         private bool _isInvincible = false;
         private List<Transform> _respawnPoints = new List<Transform>();
         
@@ -64,7 +66,6 @@ namespace Player
             FindRespawnPoints();
             
             ResetLife();
-            _livesLost = 0;
             _gameOverTriggered = false;
         }
         
@@ -123,35 +124,44 @@ namespace Player
         
         public void TakeDamage(int damage)
         {
-            // Ignorer les dégâts si invincible ou si GameOver déjà déclenché
-            if (_isInvincible || _gameOverTriggered)
+            // Ignorer les dégâts si invincible, si GameOver déjà déclenché, ou si un coup est déjà en cours
+            if (_isInvincible || _gameOverTriggered || _isHitInProgress)
                 return;
-                
+
+            _isHitInProgress = true; // Marquer qu'un coup est en cours de traitement
+    
             _currentLife -= damage;
+            Debug.Log($"Joueur prend {damage} dégâts. Vie: {_currentLife}/{maxLife}");
             onLifeChanged?.Invoke(_currentLife, maxLife);
-            
+
             if (_currentLife <= 0)
             {
-                _livesLost++;
-                Debug.Log($"Joueur {playerController.playerIndex} a perdu une vie. Vies perdues: {_livesLost}/{livesBeforeGameOver}");
-                
-                if (_livesLost >= livesBeforeGameOver)
-                {
-                    // Plus de vies, déclencher le Game Over
-                    TriggerGameOver();
-                }
-                else
-                {
-                    // Il reste des vies, réinitialiser la vie et réapparaître
-                    ResetLife();
-                    RespawnAtSafestPoint();
-                }
+                // Déclencher directement le Game Over quand la vie atteint 0
+                Debug.Log($"Joueur {playerController.playerIndex} n'a plus de vie. Game Over!");
+                _isHitInProgress = false; // Réinitialiser l'état
+                TriggerGameOver();
             }
             else
             {
-                // Encore de la vie, juste réapparaître
-                RespawnAtSafestPoint();
+                // Encore de la vie, appliquer une brève invincibilité puis réapparaître
+                StartCoroutine(HitInvincibilityCoroutine());
             }
+        }
+        
+        private System.Collections.IEnumerator HitInvincibilityCoroutine()
+        {
+            // Rendre le joueur brièvement invincible
+            _isInvincible = true;
+    
+            // Attendre un court délai pour éviter de prendre plusieurs coups d'affilée
+            yield return new WaitForSeconds(hitInvincibilityDuration);
+    
+            // Réinitialiser l'état
+            _isHitInProgress = false;
+            _isInvincible = false;
+    
+            // Réapparaître à un point sûr
+            RespawnAtSafestPoint();
         }
         
         private void TriggerGameOver()
@@ -159,6 +169,7 @@ namespace Player
             if (_gameOverTriggered)
                 return;
                 
+            Debug.Log($"Game Over pour le joueur {playerController.playerIndex}");
             _gameOverTriggered = true;
             
             // Désactiver les contrôles du joueur
@@ -167,8 +178,8 @@ namespace Player
                 playerController.enabled = false;
             }
             
-            // Jouer une animation de mort si disponible
-            // ...
+            int winIndex = playerController.playerIndex == 1 ? 0 : 1;
+            GameManager.Instance.winnerIndex = winIndex; 
             
             // Déclencher le Game Over après un délai
             StartCoroutine(GameOverCoroutine());
@@ -242,12 +253,6 @@ namespace Player
             if (playerCollider != null)
             {
                 playerCollider.enabled = true;
-            }
-            
-            // Jouer un effet de réapparition si disponible
-            if (respawnEffectPrefab != null)
-            {
-                Instantiate(respawnEffectPrefab, transform.position, Quaternion.identity);
             }
             
             // Réactiver les contrôles du joueur
@@ -371,26 +376,6 @@ namespace Player
         {
             maxLife = life;
             onLifeChanged?.Invoke(_currentLife, maxLife);
-        }
-        
-        // Réinitialiser complètement le joueur (pour un nouveau jeu)
-        public void ResetPlayer()
-        {
-            ResetLife();
-            _livesLost = 0;
-            _gameOverTriggered = false;
-            
-            // Réactiver les contrôles du joueur
-            if (playerController != null)
-            {
-                playerController.enabled = true;
-            }
-            
-            // S'assurer que le joueur est visible
-            if (playerController.spriteRenderer != null)
-            {
-                playerController.spriteRenderer.enabled = true;
-            }
         }
         
         private LifeUI FindLifeUI()

@@ -1,5 +1,6 @@
 ﻿using UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Game
 {
@@ -20,22 +21,48 @@ namespace Game
             Debug.Log("Entrée dans l'état MainMenu");
             _uiManager.ShowMainMenu();
             _gameStarting = false;
-        
-            // Ne pas désactiver les scripts des joueurs ici
-            // Les joueurs n'ont pas encore rejoint le jeu
+            
+            UpdatePlayerCountMessage();
         }
     
         public void Update()
         {
-            // Vérifier si on a assez de joueurs pour démarrer automatiquement
-            if (!_gameStarting && _gameManager.GetPlayerCount() >= _gameManager.RequiredPlayerCount)
-            {
-                _gameStarting = true;
-                Debug.Log($"Nombre requis de joueurs atteint ({_gameManager.RequiredPlayerCount}). Démarrage du jeu...");
+            if (_gameStarting)
+                return;
+                
+            // Vérifier si on a assez de joueurs
+            int playerCount = _gameManager.GetPlayerCount();
             
-                // Démarrer le jeu après un court délai
-                _gameManager.Invoke("StartGame", 1.5f);
+            // Mettre à jour le message avec le nombre de joueurs
+            UpdatePlayerCountMessage();
+            
+            // Vérifier si on a assez de joueurs pour démarrer automatiquement
+            if (playerCount >= _gameManager.RequiredPlayerCount)
+            {
+                _uiManager.HideMessagePanel();
+                StartGame();
             }
+        }
+        
+        private void UpdatePlayerCountMessage()
+        {
+            int playerCount = _gameManager.GetPlayerCount();
+            
+            if (playerCount < _gameManager.RequiredPlayerCount)
+            {
+                _uiManager.SetMenuMessage($"En attente de joueurs... ({playerCount}/{_gameManager.RequiredPlayerCount})");
+            }
+        }
+        
+        private void StartGame()
+        {
+            _gameStarting = true;
+            Debug.Log("Démarrage du jeu...");
+            
+            _uiManager.SetMenuMessage("C'est parti !");
+            
+            _gameManager.Invoke("StartGame", 1.0f);
+            _uiManager.HideMessagePanel();
         }
     
         public void Exit()

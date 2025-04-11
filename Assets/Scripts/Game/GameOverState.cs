@@ -22,7 +22,7 @@ namespace Game
             Time.timeScale = 1f;
         
             // Afficher l'écran de fin de jeu
-            _uiManager.ShowGameOverMenu();
+            _uiManager.ShowGameOverMenu(winnerIndex: _gameManager.winnerIndex);
         }
     
         public void Update()
