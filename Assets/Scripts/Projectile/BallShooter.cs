@@ -205,6 +205,8 @@ namespace Projectile
     
         private void FireBall()
         {
+            GameManager.Instance.lastTimeInput = Time.time;
+            
             // Randomply Play audio clip for shoot in list shootSFX
             int randomIndex = Random.Range(0, shootSFX.Count);
             AudioManager.Play(shootSFX[randomIndex], shootSFXVolume);

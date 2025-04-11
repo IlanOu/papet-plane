@@ -10,10 +10,8 @@ namespace UI
     public class UIManager : MonoBehaviour
     {
         [Header("Écrans de menu")]
-        [SerializeField] private GameObject introMenu;
         [SerializeField] private GameObject mainMenu;
         [SerializeField] private GameObject inGameMenu;
-        [SerializeField] private GameObject pauseMenu;
         [SerializeField] private GameObject gameOverMenu;
         
         [Header("Configs")]
@@ -105,23 +103,6 @@ namespace UI
         #region Méthodes d'affichage des menus
 
         /// <summary>
-        /// Affiche l'intro. Possibilité de transition ou affichage instantané.
-        /// </summary>
-        public void ShowIntroMenu(bool useTransition=false, float fadeOutDuration = 0.5f, float fadeInDuration = 0.5f)
-        {
-            if (useTransition)
-            {
-                StartCoroutine(TransitionBetweenMenus(introMenu, fadeOutDuration, fadeInDuration));
-            }
-            else
-            {
-                HideAllMenus();
-                introMenu.SetActive(true);
-                currentMenu = introMenu;
-            }
-        }
-
-        /// <summary>
         /// Affiche le menu principal.
         /// </summary>
         public void ShowMainMenu(bool useTransition=false, float fadeOutDuration = 0.5f, float fadeInDuration = 0.5f)
@@ -156,23 +137,7 @@ namespace UI
                 return null;
             }
         }
-
-        /// <summary>
-        /// Affiche le menu de pause (exemple sans transition, mais adaptable).
-        /// </summary>
-        public void ShowPauseMenu(bool useTransition = false, float fadeOutDuration = 0.5f, float fadeInDuration = 0.5f)
-        {
-            if (useTransition)
-            {
-                StartCoroutine(TransitionBetweenMenus(pauseMenu, fadeOutDuration, fadeInDuration));
-            }
-            else
-            {
-                HideAllMenus();
-                pauseMenu.SetActive(true);
-                currentMenu = pauseMenu;
-            }
-        }
+        
 
         /// <summary>
         /// Affiche le menu Game Over.
@@ -280,14 +245,10 @@ namespace UI
         /// </summary>
         private void HideAllMenus()
         {
-            if (introMenu != null)
-                introMenu.SetActive(false);
             if (mainMenu != null)
                 mainMenu.SetActive(false);
             if (inGameMenu != null)
                 inGameMenu.SetActive(false);
-            if (pauseMenu != null)
-                pauseMenu.SetActive(false);
             if (gameOverMenu != null)
                 gameOverMenu.SetActive(false);
         }

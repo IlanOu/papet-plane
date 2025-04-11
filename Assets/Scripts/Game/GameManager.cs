@@ -35,9 +35,10 @@ namespace Game
         // States
         private MainMenuState _mainMenuState;
         private PlayingState _playingState;
-        private PausedState _pausedState;
         private GameOverState _gameOverState;
-    
+
+        [HideInInspector] public float lastTimeInput;
+        
         private void Awake()
         {
             // Pattern Singleton
@@ -78,7 +79,6 @@ namespace Game
             // Créer les états
             _mainMenuState = new MainMenuState(this, uiManager);
             _playingState = new PlayingState(this, uiManager);
-            _pausedState = new PausedState(this, uiManager);
             _gameOverState = new GameOverState(this, uiManager);
         }
     
@@ -165,11 +165,6 @@ namespace Game
             _stateMachine.ChangeState(_playingState);
         }
     
-        public void PauseGame()
-        {
-            _stateMachine.ChangeState(_pausedState);
-        }
-    
         public void ResumeGame()
         {
             _stateMachine.ChangeState(_playingState);
@@ -205,11 +200,16 @@ namespace Game
             // Attendre une frame pour s'assurer que tout est bien détruit
             yield return null;
         
-            // Redémarrer
-            _stateMachine.ChangeState(_mainMenuState);
-            
-            // Reload scene
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            // Charger la scène asynchrone
+            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
+    
+            // Attendre que la scène soit prête
+            while (!asyncLoad.isDone)
+            {
+                yield return null;
+            }
+    
+            // Réinitialiser la référence statique et se détruire
             Instance = null;
             Destroy(gameObject);
         }

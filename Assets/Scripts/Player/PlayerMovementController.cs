@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Game;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Player
@@ -31,6 +32,8 @@ namespace Player
         // Méthode appelée par l'Input System
         public void OnMove(InputAction.CallbackContext context)
         {
+            GameManager.Instance.lastTimeInput = Time.time;
+            
             // Bloquer l'input pendant le reload
             if (playerController.ballShooter.IsReloading())
             {
