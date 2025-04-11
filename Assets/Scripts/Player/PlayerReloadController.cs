@@ -20,6 +20,7 @@ namespace Player
     
         [Header("SFX")]
         [SerializeField] private AudioClip reloadSFX;
+        [SerializeField] private float reloadSFXVolume = 1f;
         
         private void Awake()
         {
@@ -41,7 +42,7 @@ namespace Player
             if (reloadCoroutine != null)
                 StopCoroutine(reloadCoroutine);
             
-            AudioManager.Play(reloadSFX);
+            AudioManager.Play(reloadSFX, reloadSFXVolume);
             reloadCoroutine = StartCoroutine(PlayReloadAnimation(ballShooter.reloadTime));
         }
     

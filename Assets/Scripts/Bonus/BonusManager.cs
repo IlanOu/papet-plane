@@ -1,4 +1,5 @@
-﻿using Projectile;
+﻿using Audio;
+using Projectile;
 using UnityEngine;
 
 namespace Bonus
@@ -13,6 +14,10 @@ namespace Bonus
         [Tooltip("Référence au GameObject contenant le quad avec le sprite d'aura")]
         [SerializeField] private GameObject bonusAura;
         [SerializeField] private Color defaultAuraColor = Color.clear;
+        
+        [Header("SFX")]
+        [SerializeField] private AudioClip bonusSFX;
+        [SerializeField] private float bonusSFXVolume = 10f;
         
         void Awake()
         {
@@ -107,6 +112,9 @@ namespace Bonus
         public void ActivateBonus(BallBonus bonus)
         {
             if (bonus == null) return;
+            
+            // Play SFX
+            AudioManager.Play(bonusSFX, bonusSFXVolume);
             
             currentBonus = bonus;
             bonusEndTime = Time.time + bonus.duration;

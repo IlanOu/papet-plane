@@ -356,6 +356,11 @@ MonoBehaviour:
   reloading:
     m_PersistentCalls:
       m_Calls: []
+  shootSFX:
+  - {fileID: 8300000, guid: b592df1e36002894e82afb6ef1065653, type: 3}
+  - {fileID: 8300000, guid: 4965c83a69d6eae478d6862f29e123eb, type: 3}
+  - {fileID: 8300000, guid: d4f3e6fa62142394d833a02dcab9ee9e, type: 3}
+  shootSFXVolume: 10
 --- !u!114 &832931217501973851
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -407,6 +412,7 @@ MonoBehaviour:
   defaultReloadAnimationDuration: 2
   isCurrentlyReloading: 0
   reloadSFX: {fileID: 8300000, guid: dd9ed772189355047bdb2cdaf02d9140, type: 3}
+  reloadSFXVolume: 10
 --- !u!114 &6168564350565970421
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -421,6 +427,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bonusAura: {fileID: 2803162045691829755}
   defaultAuraColor: {r: 0, g: 0, b: 0, a: 0}
+  bonusSFX: {fileID: 8300000, guid: 4269fab0dd6ee474f8188a0f571b1b0c, type: 3}
+  bonusSFXVolume: 7
 --- !u!114 &3964545271655382414
 MonoBehaviour:
   m_ObjectHideFlags: 0

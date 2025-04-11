@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using Audio;
 using Bonus;
 using Game;
 using Player;
@@ -26,7 +28,7 @@ namespace Projectile
         [Header("Ammo Settings")]
         public int magazineCapacity = 5; // Nombre maximal de munitions dans le chargeur
         private int _currentAmmo;                          // Munitions actuellement disponibles dans le chargeur
-    
+        
         // Nombre de tirs autorisés avant de devoir recharger l'arme (même si le chargeur n'est pas vide)
         [SerializeField] private int shotsBeforeReload = 1;
         // Compteur de tirs effectués depuis la dernière recharge (état "chargé")
@@ -49,6 +51,10 @@ namespace Projectile
         
         [HideInInspector] public UnityEvent reloading;
     
+        [Header("SFX")]
+        [SerializeField] private List<AudioClip> shootSFX;
+        [SerializeField] private float shootSFXVolume = 1f;
+        
         private void Awake()
         {
             _bonusManager = GetComponent<BonusManager>();
@@ -199,6 +205,10 @@ namespace Projectile
     
         private void FireBall()
         {
+            // Randomply Play audio clip for shoot in list shootSFX
+            int randomIndex = Random.Range(0, shootSFX.Count);
+            AudioManager.Play(shootSFX[randomIndex], shootSFXVolume);
+            
             GameObject ball = Instantiate(ballPrefab, spawnPoint.position, Quaternion.identity);
             GameManager.Instance.instantiatedThings.Add(ball);
             

@@ -6,8 +6,15 @@ namespace Audio
     {
         public static AudioManager Instance { get; private set; }
 
-        // Un AudioSource utilisé pour jouer les sons (tu peux en ajouter d'autres si besoin)
-        [SerializeField] private AudioSource audioSource;
+        // AudioSource pour les SFX
+        [SerializeField] private AudioSource sfxAudioSource;
+        
+        // AudioSource dédié pour la musique d'ambiance
+        [SerializeField] private AudioSource musicAudioSource;
+        
+        // La musique d'ambiance à jouer
+        [SerializeField] private AudioClip backgroundMusic;
+        [SerializeField] private float backgroundMusicVolume = 0.5f;
 
         private void Awake()
         {
@@ -15,30 +22,73 @@ namespace Audio
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject); // Optionnel, si tu veux que l'audio persiste entre les scènes
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
                 Destroy(gameObject);
+                return;
             }
+            
+            // S'assurer que les AudioSources existent
+            if (sfxAudioSource == null)
+                sfxAudioSource = gameObject.AddComponent<AudioSource>();
+                
+            if (musicAudioSource == null)
+                musicAudioSource = gameObject.AddComponent<AudioSource>();
+        }
+        
+        private void Start()
+        {
+            // Configurer et démarrer la musique d'ambiance
+            PlayBackgroundMusic(backgroundMusic, backgroundMusicVolume);
         }
 
         /// <summary>
         /// Joue un clip audio depuis le AudioManager.
         /// </summary>
-        /// <param name="clip">Le clip audio à jouer</param>
-        /// <param name="volume">Volume optionnel (par défaut: 1)</param>
         public void PlaySound(AudioClip clip, float volume = 1f)
         {
-            // Vérifier que le clip n'est pas nul
             if (clip == null)
             {
                 Debug.LogWarning("AudioManager.PlaySound() - Aucun clip audio n'a été assigné.");
                 return;
             }
 
-            // Joue le son via l'AudioSource (optionnel : peut être remplacé par PlayOneShot)
-            audioSource.PlayOneShot(clip, volume);
+            sfxAudioSource.PlayOneShot(clip, volume);
+        }
+
+        /// <summary>
+        /// Joue une musique d'ambiance en boucle.
+        /// </summary>
+        public void PlayBackgroundMusic(AudioClip musicClip, float volume = 0.5f)
+        {
+            if (musicClip == null)
+            {
+                Debug.LogWarning("AudioManager.PlayBackgroundMusic() - Aucun clip audio n'a été assigné.");
+                return;
+            }
+            
+            musicAudioSource.clip = musicClip;
+            musicAudioSource.loop = true;
+            musicAudioSource.volume = volume;
+            musicAudioSource.Play();
+        }
+        
+        /// <summary>
+        /// Change le volume de la musique d'ambiance.
+        /// </summary>
+        public void SetMusicVolume(float volume)
+        {
+            musicAudioSource.volume = volume;
+        }
+        
+        /// <summary>
+        /// Arrête la musique d'ambiance.
+        /// </summary>
+        public void StopBackgroundMusic()
+        {
+            musicAudioSource.Stop();
         }
 
         /// <summary>

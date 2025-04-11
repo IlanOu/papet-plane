@@ -45,6 +45,6 @@ namespace Bonus
 
         public override void OnDespawn() { }
 
-        public override Color GetAuraColor() => Color.magenta;
+        public override Color GetAuraColor() => Color.green;
     }
 }
