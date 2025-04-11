@@ -196,22 +196,30 @@ namespace Game
         {
             // Nettoyer d'abord
             yield return StartCoroutine(CleanupGameCoroutine());
-        
+    
             // Attendre une frame pour s'assurer que tout est bien détruit
             yield return null;
-        
+    
+            // Sauvegarder temporairement l'instance actuelle
+            GameManager currentInstance = Instance;
+    
+            // Réinitialiser la référence statique avant de charger la nouvelle scène
+            Instance = null;
+    
             // Charger la scène asynchrone
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
-    
+
             // Attendre que la scène soit prête
-            while (asyncLoad != null && !asyncLoad.isDone)
+            while (!asyncLoad.isDone)
             {
                 yield return null;
             }
     
-            // Réinitialiser la référence statique et se détruire
-            Instance = null;
-            Destroy(gameObject);
+            // Maintenant que la scène est chargée, détruire l'ancien GameManager
+            if (currentInstance != null)
+            {
+                Destroy(currentInstance.gameObject);
+            }
         }
     
         // Méthodes internes
