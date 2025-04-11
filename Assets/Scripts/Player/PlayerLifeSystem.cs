@@ -10,6 +10,7 @@ namespace Player
     {
         [Header("Composants")]
         [SerializeField] private PlayerController playerController;
+        [SerializeField] private PlayerMovementController playerMovementController;
         [SerializeField] private PlayerHit playerHit;
 
         [Header("Paramètres")]
@@ -226,47 +227,61 @@ namespace Player
             {
                 playerController.spriteRenderer.enabled = false;
             }
-            
-            // Désactiver les collisions pendant la réapparition
+
+            // Désactiver les collisions pendant la réapparition (si applicable)
             Collider2D playerCollider = GetComponent<Collider2D>();
             if (playerCollider != null)
             {
                 playerCollider.enabled = false;
             }
-            
+    
+            // Désactiver les contrôles du joueur pour éviter tout mouvement pendant le respawn
+            if (playerController != null)
+            {
+                playerController.enabled = false;
+            }
+    
             // Attendre le délai de réapparition
             yield return new WaitForSeconds(respawnDelay);
-            
+    
             // Trouver le point de respawn le plus sûr
             Transform respawnPoint = FindSafestRespawnPoint();
-            
+    
             // Déplacer le joueur au point de respawn
             transform.position = respawnPoint.position;
-            
+    
+            // Réinitialiser l'input de mouvement pour éviter toute persistance de l'ancien input
+            PlayerMovementController movementController = GetComponent<PlayerMovementController>();
+            if (movementController != null)
+            {
+                movementController.ResetMovementInput();
+            }
+    
             // Rendre le joueur à nouveau visible
             if (playerController.spriteRenderer != null)
             {
                 playerController.spriteRenderer.enabled = true;
             }
-            
+    
             // Réactiver les collisions
             if (playerCollider != null)
             {
                 playerCollider.enabled = true;
             }
-            
+    
             // Réactiver les contrôles du joueur
             if (playerController != null)
             {
                 playerController.enabled = true;
             }
-            
+    
             // Déclencher l'événement de réapparition
             onRespawn?.Invoke();
-            
+    
             // Activer l'invincibilité temporaire
             StartCoroutine(TemporaryInvincibility());
         }
+
         
         private Transform FindSafestRespawnPoint()
         {

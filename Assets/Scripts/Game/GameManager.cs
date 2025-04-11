@@ -204,7 +204,7 @@ namespace Game
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().buildIndex);
     
             // Attendre que la scène soit prête
-            while (!asyncLoad.isDone)
+            while (asyncLoad != null && !asyncLoad.isDone)
             {
                 yield return null;
             }
@@ -280,7 +280,6 @@ namespace Game
             instantiatedThings.RemoveAll(item => !item.CompareTag("Player") && item != null);
         
             // Attendre deux frames pour s'assurer que tout est bien détruit
-            yield return null;
             yield return null;
         
             // Force une collection des objets détruits

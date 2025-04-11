@@ -113,5 +113,11 @@ namespace Player
             }
             return movementInput;
         }
+        
+        public void ResetMovementInput()
+        {
+            movementInput = Vector2.zero;
+        }
+
     }
 }

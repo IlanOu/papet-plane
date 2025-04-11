@@ -460,6 +460,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerController: {fileID: 4057311952216209680}
+  playerMovementController: {fileID: 832931217501973851}
   playerHit: {fileID: 3329961799539476935}
   maxLife: 3
   hitDamage: 1
