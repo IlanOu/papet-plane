@@ -43,6 +43,8 @@ namespace UI
             
             // Optionnel : vous pouvez définir un menu par défaut au démarrage
             ShowMainMenu(false);
+            
+            GameManager.Instance.uiManager = this;
         }
 
         #region Méthodes d'affichage avec Transition (Fade Out / Fade In)

@@ -14,7 +14,7 @@ namespace Game
         public static GameManager Instance { get; private set; }
     
         [Header("References")]
-        [SerializeField] private UIManager uiManager;
+        public UIManager uiManager;
         
         [Tooltip("Prefab du gestionnaire de multiplayer")]
         [SerializeField] private GameObject multiplayerManagerPrefab;
@@ -45,7 +45,7 @@ namespace Game
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
+                // DontDestroyOnLoad(gameObject);
             }
             else
             {
