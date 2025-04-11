@@ -5,6 +5,7 @@ using Player;
 using UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace Game
 {
@@ -205,7 +206,12 @@ namespace Game
             yield return null;
         
             // Redémarrer
-            _stateMachine.ChangeState(_playingState);
+            _stateMachine.ChangeState(_mainMenuState);
+            
+            // Reload scene
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            Instance = null;
+            Destroy(gameObject);
         }
     
         // Méthodes internes
