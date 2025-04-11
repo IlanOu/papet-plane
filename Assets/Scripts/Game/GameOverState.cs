@@ -67,7 +67,7 @@ namespace Game
             }
             else
             {
-                _uiManager.SetMenuMessage("Redémarrage...");
+                _uiManager.SetMenuMessage("Redemarrage...");
             }
         }
         

@@ -122,15 +122,30 @@ namespace Multiplayer
                     Debug.Log($"Joueur {playerIndex+1} assigné à l'équipe {teamIndex+1} (couleur: {_teamColors[teamIndex]})");
                 }
             }
-        
-            // Positionner au spawn point
-            if (spawnPoints != null && playerIndex < spawnPoints.Length)
+            
+            // Si nous avons atteint le nombre requis de joueurs (2 joueurs), placer correctement les joueurs
+            if (_currentPlayerCount == GameManager.Instance.RequiredPlayerCount)
             {
-                newPlayerInput.transform.position = spawnPoints[playerIndex].position;
+                PositionAllPlayers();
+                
+                // Si le jeu est prêt à commencer, désactiver le joining
+                _inputManager.DisableJoining();
+                Debug.Log("Nombre requis de joueurs atteint, joining désactivé");
             }
             else
             {
-                Debug.LogError($"Pas de spawn point pour le joueur {playerIndex+1}!");
+                // Positionner au spawn point temporaire (position d'attente)
+                if (spawnPoints != null && playerIndex < spawnPoints.Length)
+                {
+                    // Position temporaire (plus en retrait)
+                    Vector3 waitPosition = spawnPoints[playerIndex].position;
+                    waitPosition.z = 10f; // Position d'attente en arrière-plan
+                    newPlayerInput.transform.position = waitPosition;
+                }
+                else
+                {
+                    Debug.LogError($"Pas de spawn point pour le joueur {playerIndex+1}!");
+                }
             }
         
             // Si le nombre max est atteint, désactiver le joining
@@ -138,6 +153,37 @@ namespace Multiplayer
             {
                 _inputManager.DisableJoining();
                 Debug.Log("Nombre maximum de joueurs atteint, joining désactivé");
+            }
+        }
+        
+        // Nouvelle méthode pour positionner correctement tous les joueurs
+        private void PositionAllPlayers()
+        {
+            Debug.Log("Positionnement de tous les joueurs aux points de spawn définitifs");
+            
+            // Repositionner tous les joueurs à leur position de jeu
+            for (int i = 0; i < _spawnedPlayers.Count; i++)
+            {
+                if (_spawnedPlayers[i] != null && i < spawnPoints.Length)
+                {
+                    // Position finale de jeu
+                    _spawnedPlayers[i].transform.position = spawnPoints[i].position;
+                    
+                    PlayerController controller = _spawnedPlayers[i].GetComponent<PlayerController>();
+                    if (controller != null)
+                    {
+                        // Activer les scripts nécessaires pour le jeu
+                        controller.enabled = true;
+                    }
+                }
+            }
+            
+            // Informer le GameManager que tous les joueurs sont prêts
+            if (GameManager.Instance != null)
+            {
+                // Optionnellement, vous pourriez appeler une méthode sur GameManager
+                // pour indiquer que les joueurs sont prêts
+                // GameManager.Instance.PlayersReady();
             }
         }
     
