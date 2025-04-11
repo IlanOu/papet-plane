@@ -470,8 +470,7 @@ MonoBehaviour:
   respawnDelay: 0.5
   invincibilityDuration: 1.5
   topSpawnPointsToConsider: 3
-  livesBeforeGameOver: 3
-  gameOverDelay: 2
+  gameOverDelay: 1
   onLifeChanged:
     m_PersistentCalls:
       m_Calls: []

@@ -33,8 +33,7 @@ namespace Player
         [SerializeField] private int topSpawnPointsToConsider = 3;
         
         [Header("Game Over")]
-        [Tooltip("Nombre de vies perdues avant Game Over")]
-        [SerializeField] private int livesBeforeGameOver = 3;
+
         [Tooltip("Délai avant de passer à l'écran Game Over (en secondes)")]
         [SerializeField] private float gameOverDelay = 2f;
         

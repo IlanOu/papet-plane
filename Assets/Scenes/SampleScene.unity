@@ -6106,8 +6106,8 @@ MonoBehaviour:
   - {fileID: 480966491}
   - {fileID: 808655650}
   - {fileID: 2009157484}
-  timeBetweenSpawns: 30
-  maxActiveObjects: -1
+  timeBetweenSpawns: 5
+  maxActiveObjects: 1
 --- !u!4 &637992981
 Transform:
   m_ObjectHideFlags: 0
@@ -18790,7 +18790,7 @@ MonoBehaviour:
   - {fileID: 1663677583}
   - {fileID: 714408593}
   - {fileID: 1809413546}
-  timeBetweenSpawns: 3
+  timeBetweenSpawns: 30
   maxActiveObjects: 1
 --- !u!4 &2080776852
 Transform:

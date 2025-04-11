@@ -15,18 +15,18 @@ namespace Bonus
         [Tooltip("Activer l'aide à la visée")]
         public bool aimAssistEnabled = true;
         [Tooltip("Rayon de détection des cibles potentielles")]
-        public float targetDetectionRadius = 30f;
+        public float targetDetectionRadius = 50f;
         [Tooltip("Force de l'aide à la visée (0-1, où 1 est une correction complète)")]
         [Range(0, 1)]
-        public float aimAssistStrength = 0.8f;
+        public float aimAssistStrength = 1f;
         [Tooltip("Vitesse à laquelle l'aide à la visée ajuste la trajectoire")]
-        public float aimAssistSpeed = 2f;
+        public float aimAssistSpeed = 4f;
         [Tooltip("Tag des objets pouvant être ciblés")]
         public string targetTag = "Player";
         [Tooltip("Temps minimum avant que l'aim assist ne s'active (en secondes)")]
         public float aimAssistDelay = 0.2f;
         [Tooltip("Angle maximum (en degrés) pour que l'aim assist considère une cible")]
-        public float maxAimAssistAngle = 45f;
+        public float maxAimAssistAngle = 60f;
         
         private Transform _currentTarget;
         private float _timeSinceSpawn;
